@@ -1,0 +1,119 @@
+// NOTE: This file is a legacy scaffold artifact. The project uses Drizzle ORM,
+// not Prisma. The authoritative schema lives in shared/db/schema/ as Drizzle
+// table definitions. This file should be deleted once Drizzle schema is scaffolded.
+//
+// Known gaps vs. the final design:
+//   - Missing tables: asset_assignments, ticket_events, devices, device_status_log, alerts
+//   - Role enum should be: end_user, it_staff, admin (not USER/TECHNICIAN/ADMIN)
+//   - Asset model missing: asset_tag, purchase_date, warranty_expiry
+//   - Comment model missing: User relation on authorId
+//   - No soft-delete (deleted_at) on User
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  TECHNICIAN
+  ADMIN
+}
+
+enum TicketStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  PENDING_USER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ASSIGNED
+  MAINTENANCE
+  RETIRED
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String
+  password     String
+  role         Role      @default(USER)
+  department   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  ticketsCreated Ticket[]  @relation("Requester")
+  ticketsAssigned Ticket[] @relation("Assignee")
+  assetsOwned     Asset[]
+  logs           AuditLog[]
+}
+
+model Asset {
+  id           String      @id @default(uuid())
+  name         String
+  serialNumber String      @unique
+  category     String
+  status       AssetStatus @default(AVAILABLE)
+  ownerId      String?
+  owner        User?       @relation(fields: [ownerId], references: [id])
+  tickets      Ticket[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Ticket {
+  id           String         @id @default(uuid())
+  title        String
+  description  String
+  status       TicketStatus   @default(OPEN)
+  priority     TicketPriority @default(MEDIUM)
+  
+  requesterId  String
+  requester    User           @relation("Requester", fields: [requesterId], references: [id])
+  
+  assigneeId   String?
+  assignee     User?          @relation("Assignee", fields: [assigneeId], references: [id])
+  
+  assetId      String?
+  asset        Asset?         @relation(fields: [assetId], references: [id])
+  
+  comments     Comment[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  authorId  String
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  entity    String
+  entityId  String
+  payload   Json?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
