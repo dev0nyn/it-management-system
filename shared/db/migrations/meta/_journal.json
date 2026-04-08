@@ -1,0 +1,13 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1775632863038,
+      "tag": "0000_smiling_sleepwalker",
+      "breakpoints": true
+    }
+  ]
+}
