@@ -1,0 +1,428 @@
+{
+  "items": [
+    {
+      "assignees": ["dev0nyn"],
+      "content": {
+        "body": "# IT Management System — Architecture Initialization\r\n\r\nInitial setup of a scalable IT Management System using a modular monorepo architecture, designed for maintainability, performance, and clear service boundaries.\r\n\r\n## Architecture Highlights\r\n- Modular Monorepo (Next.js 14 + Fastify services)\r\n- Built for scalability and service isolation\r\n- Domain-driven module structure\r\n\r\n## Tech Stack\r\n- **Frontend:** Next.js 14, React, Tailwind CSS 4\r\n- **Backend:** Fastify\r\n- **Database:** PostgreSQL 16\r\n- **ORM:** Drizzle\r\n- **Queue:** BullMQ\r\n- **Testing:** Vitest (JSDOM)\r\n- **Tooling:** TypeScript (strict), Husky\r\n\r\n## Core Modules\r\n- **Auth** – Authentication & authorization\r\n- **Users** – User management\r\n- **Assets** – Asset tracking\r\n- **Tickets** – Issue tracking system\r\n- **Reports** – Analytics & reporting\r\n- **Monitoring** – System health & logging\r\n\r\n## Design Principles\r\n- Append-only database history\r\n- Immutable event-driven patterns\r\n- Thin routes, Fat services\r\n- Repository pattern\r\n- Clear separation of concerns\r\n\r\n## Project Structure\r\n- `apps/` – Frontend applications\r\n- `services/` – Backend services\r\n- `packages/` – Shared logic and types\r\n- `system-design/` – Architecture and planning docs\r\n\r\n## Documentation\r\n- `README_ARCHITECTURE.md` – Overview & onboarding\r\n- `system-design/architecture_spec.md` – Technical specs\r\n- `system-design/planning.md` – Roadmap and planning\r\n\r\n## Configuration\r\n- `package.json` – Dependencies and scripts\r\n- `tsconfig.json` – Strict TypeScript setup\r\n- `vite.config.ts` – Vitest + JSDOM config\r\n\r\n## Summary\r\nThis commit establishes the foundation of the IT Management System, including architecture, standards, documentation, and core configuration—ready for development and team collaboration.",
+        "number": 2,
+        "repository": "dev0nyn/it-management-system",
+        "title": "docs: System design planning",
+        "type": "PullRequest",
+        "url": "https://github.com/dev0nyn/it-management-system/pull/2"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpWyt4",
+      "labels": ["documentation"],
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "reviewers": ["rinehardramos"],
+      "status": "Done",
+      "title": "docs: System design planning"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Initialize backend project, frontend project, linter, formatter, CI config.\n- [ ] Add `docker-compose.yml` for DB + app for local dev.\n- [ ] Wire pre-commit hooks: lint, typecheck, test.\n\n### Acceptance Criteria\n- `docker compose up` brings up DB + empty API + empty frontend.\n- CI runs lint + typecheck + tests on PR and blocks on failure.\n- README documents local setup in ≤ 5 commands.",
+        "number": 3,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 0.1 — Repo scaffolding & tooling",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/3"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9mM",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 0.1 — Repo scaffolding & tooling"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] JWT issue/verify helpers.\n- [ ] Role-based middleware: `admin`, `it_staff`, `end_user`.\n- [ ] Shared error envelope `{ error: { code, message } }`.\n\n### Acceptance Criteria\n- Middleware rejects missing/expired/invalid tokens with 401.\n- RBAC denies unauthorized roles with 403.\n- Unit tests cover happy path + each rejection case.",
+        "number": 5,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 0.3 — Shared auth middleware & RBAC",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/5"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9nM",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 0.3 — Shared auth middleware & RBAC"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] `POST /api/v1/auth/login` → returns JWT on valid credentials, 401 otherwise.\n- [ ] Login page with form, error display, redirect to dashboard on success.\n- [ ] Rate-limit login attempts (per IP + per username).\n\n### Acceptance Criteria\n- Valid creds → 200 + token + redirect to `/dashboard`.\n- Invalid creds → inline error \"Invalid username or password\" (no user enumeration).\n- 5 failed attempts in 1 min → 429.\n- Passwords stored hashed (bcrypt/argon2), never logged.",
+        "number": 7,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 1.1 — Login endpoint + UI",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/7"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9nk",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 1.1 — Login endpoint + UI"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Choose migration tool; create initial migration with tables: `users`, `roles`, `assets`, `asset_assignments`, `tickets`, `ticket_events`, `devices`, `device_status_log`, `alerts`, `audit_log`.\n- [ ] Seed script with one admin user.\n\n### Acceptance Criteria\n- `migrate up` / `migrate down` both succeed on empty DB.\n- Seed produces a loginable admin.\n- ER diagram committed to `docs/erd.md`.",
+        "number": 4,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 0.2 — Database schema & migration framework",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/4"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9no",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 0.2 — Database schema & migration framework"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Authenticated layout with nav: Users, Assets, Tickets, Reports, Monitoring, Logout.\n- [ ] Hide nav items by role.\n\n### Acceptance Criteria\n- Unauthenticated users hitting `/dashboard` are redirected to `/login`.\n- End users do not see User Management or Reports nav items.\n- Logout clears token and redirects to `/login`.",
+        "number": 8,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 1.2 — Dashboard shell & navigation",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/8"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9nw",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 1.2 — Dashboard shell & navigation"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Define `NotificationService` interface (email + in-app).\n- [ ] Provide a no-op + console implementation for dev.\n\n### Acceptance Criteria\n- Interface documented in `shared/notifications/README.md`.\n- Tickets and Monitoring epics can import it without pulling a concrete implementation.",
+        "number": 6,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 0.4 — Shared notification service interface",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/6"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9oA",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 0.4 — Shared notification service interface"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] `POST /api/v1/auth/logout` → invalidates refresh token / clears session.\n\n### Acceptance Criteria\n- After logout, prior token cannot access protected routes.\n- Audit log entry written.",
+        "number": 9,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 1.3 — Logout endpoint",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/9"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9oU",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 1.3 — Logout endpoint"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Users table with search, filter by role, create/edit modals, delete confirm.\n\n### Acceptance Criteria\n- All CRUD actions from UI reflect in DB within one network round trip.\n- Form validation matches API validation (required fields, email format).\n- Destructive actions require confirmation.",
+        "number": 11,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 2.2 — User management UI",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/11"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9pU",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 2.2 — User management UI"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Write audit log row on create/update/delete with actor, target, before/after.\n\n### Acceptance Criteria\n- Every mutation produces exactly one audit row.\n- Audit rows are queryable by target user id.",
+        "number": 12,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 2.3 — Audit logging for user changes",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/12"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9pY",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 2.3 — Audit logging for user changes"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] `GET/POST/PATCH/DELETE /api/v1/assets` with fields: tag, type, serial, status, purchase date, warranty.\n\n### Acceptance Criteria\n- Asset tag is unique; duplicate returns 409.\n- Status is a bounded enum (`in_stock`, `assigned`, `repair`, `retired`).\n- IT staff + admin can mutate; end users read-only on assets assigned to them.",
+        "number": 13,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 3.1 — CRUD assets (API)",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/13"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9pg",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 3.1 — CRUD assets (API)"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] `GET/POST/PATCH/DELETE /api/v1/users` with pagination + search.\n- [ ] Enforce admin-only access.\n\n### Acceptance Criteria\n- Admin can create, list (paginated), update, soft-delete users.\n- Non-admin receives 403.\n- Email uniqueness enforced; duplicate returns 409.\n- Soft-deleted users cannot log in.",
+        "number": 10,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 2.1 — CRUD users (API)",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/10"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9po",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 2.1 — CRUD users (API)"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] `POST /api/v1/assets/:id/assign` body `{ userId }`; `POST /api/v1/assets/:id/unassign`.\n- [ ] Create `asset_assignments` history row on each change.\n\n### Acceptance Criteria\n- Assigning an already-assigned asset returns 409 unless `force=true`.\n- Assignment history preserved across reassignments.\n- Asset status transitions to `assigned` / back to `in_stock` automatically.",
+        "number": 14,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 3.2 — Assign / unassign asset to user",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/14"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9pw",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 3.2 — Assign / unassign asset to user"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Assets table, create/edit form, assign dialog with user search.\n\n### Acceptance Criteria\n- UI shows current holder and full assignment history.\n- Assign dialog searches users via API (debounced).\n- CSV import stub is out of scope for this epic.",
+        "number": 15,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 3.3 — Asset management UI",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/15"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9qE",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 3.3 — Asset management UI"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] `POST /api/v1/tickets` with fields: title, description, priority, category, optional asset id.\n- [ ] Submit form for end users.\n\n### Acceptance Criteria\n- Ticket persists with `status=open`, `createdBy=currentUser`.\n- On create, `NotificationService.notify('it_staff', …)` fires exactly once.\n- Validation: title ≤ 120 chars, description required.",
+        "number": 16,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 4.1 — Submit ticket (API + UI)",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/16"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9qw",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 4.1 — Submit ticket (API + UI)"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] `GET /api/v1/tickets` (filter by status, assignee, priority, mine).\n- [ ] `PATCH /api/v1/tickets/:id` for status/assignee/comment.\n- [ ] Ticket detail page with event timeline.\n\n### Acceptance Criteria\n- End users see only their own tickets; IT staff see all.\n- Every status/assignee change writes a `ticket_events` row.\n- Closing a ticket requires a resolution note.",
+        "number": 17,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 4.2 — View & update ticket",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/17"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9rE",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 4.2 — View & update ticket"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Hook into `NotificationService` on create and on reassignment.\n\n### Acceptance Criteria\n- New ticket → notification to all `it_staff` role members (or assigned group).\n- Reassignment → notification to new assignee only.\n- Notification failures are logged but do not fail the request.",
+        "number": 18,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 4.3 — Notify IT staff on new/updated tickets",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/18"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9rU",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 4.3 — Notify IT staff on new/updated tickets"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Implement reports: tickets by status, tickets by resolution time, assets by status, user activity.\n- [ ] Date range + role filter parameters.\n\n### Acceptance Criteria\n- Each report returns JSON with consistent envelope `{ columns, rows, generatedAt }`.\n- Queries execute under 2s on seed data set (≥ 10k rows).",
+        "number": 19,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 5.1 — Report definitions",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/19"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9rk",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 5.1 — Report definitions"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Reports page listing available reports; parameter form; table + simple chart render.\n\n### Acceptance Criteria\n- Selecting a report and submitting parameters renders results without full page reload.\n- Empty results show a clear \"No data\" state, not a blank table.",
+        "number": 20,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 5.2 — Report UI (display)",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/20"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9ro",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 5.2 — Report UI (display)"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] `GET /api/v1/reports/:id/export?format=csv|pdf`.\n\n### Acceptance Criteria\n- CSV opens cleanly in Excel/Sheets (UTF-8 BOM, quoted fields).\n- PDF includes title, parameters, generated timestamp.\n- Only admin + it_staff can export.",
+        "number": 21,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 5.3 — Export (CSV + PDF)",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/21"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9r4",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 5.3 — Export (CSV + PDF)"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Background worker polls each device per its interval (ICMP or TCP port check).\n- [ ] Write `device_status_log` row per check.\n\n### Acceptance Criteria\n- Worker survives restart (resumes from schedule, no duplicate checks).\n- Failing check transitions device to `down` after N consecutive failures (configurable, default 3).\n- Recovery transitions back to `up` on first success.",
+        "number": 23,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 6.2 — Health check worker",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/23"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9sI",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 6.2 — Health check worker"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] `GET/POST/PATCH/DELETE /api/v1/devices` with host/ip, type, check interval.\n\n### Acceptance Criteria\n- IP/host uniqueness enforced.\n- Admin-only mutations; it_staff read-only.",
+        "number": 22,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 6.1 — Device registry",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/22"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9sM",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 6.1 — Device registry"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] On transition to `down`, call `NotificationService` once.\n- [ ] Create row in `alerts` with device, first-seen, status.\n- [ ] On recovery, append resolution timestamp.\n\n### Acceptance Criteria\n- No duplicate alerts for the same ongoing incident.\n- Alert contains device identifier, time, and last error.\n- Alerts page lists open + recent alerts, filterable by device.",
+        "number": 24,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 6.3 — Alerting on detected issue",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/24"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9sY",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 6.3 — Alerting on detected issue"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Dashboard widget: counts of up/down devices + latest alerts.\n\n### Acceptance Criteria\n- Widget refreshes every 30s without full page reload.\n- Clicking a device navigates to its detail/status history.",
+        "number": 25,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 6.4 — Monitoring dashboard widget",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/25"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9sk",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 6.4 — Monitoring dashboard widget"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Implement E2E smoke tests for the main flow.\n\n### Acceptance Criteria\n- Scripted flow: login → create ticket → assign asset → generate report → logout runs green in CI.",
+        "number": 26,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 7.1 — E2E smoke tests",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/26"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9tA",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 7.1 — E2E smoke tests"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Implement structured logs, health endpoints, and basic metrics.\n\n### Acceptance Criteria\n- Structured logs with request id; `/healthz` and `/readyz` endpoints; basic metrics (request count, latency, error rate).",
+        "number": 27,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 7.2 — Observability",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/27"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9tY",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Backlog",
+      "title": "Story 7.2 — Observability"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Dependency audit, CSRF protection, security headers, env secrets.\n\n### Acceptance Criteria\n- Dependency audit clean; CSRF protection on state-changing forms; security headers set; secrets pulled from env, not code.",
+        "number": 28,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 7.3 — Security hardening pass",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/28"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW9ts",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Backlog",
+      "title": "Story 7.3 — Security hardening pass"
+    },
+    {
+      "content": {
+        "body": "# API Backend Project Plan - IT Management System\n\nThis plan outlines the implementation of the modular API backend for the IT Management System, following the architecture and tech stack defined in `CLAUDE.md`.\n\n## 🏗 Tech Stack & Architecture\n- **Runtime**: Node.js 20 LTS\n- **Language**: TypeScript (Strict)\n- **Framework**: Fastify (Schema-first validation)\n- **ORM**: Drizzle ORM\n- **Database**: PostgreSQL 16\n- **Monorepo Manager**: pnpm workspaces\n- **Background Jobs**: BullMQ on Redis\n- **Auth**: JWT (Access + Refresh tokens), argon2 hashing\n- **Testing**: Vitest (Unit), Supertest (Integration)\n- **API Style**: RESTful JSON API (`/api/v1/...`)\n\n---\n\n## 📅 Epic Breakdown & Implementation Roadmap\n\n### Epic 0: Foundation & Shared Infrastructure (Blocking)\n*Goal: Setup the monorepo, shared modules, and core utilities.*\n\n- **T-0.1: Monorepo Scaffolding**\n  - Initialize pnpm workspace.\n  - Setup root `package.json`, `tsconfig.json`, ESLint, and Prettier.\n  - Create directory structure: `apps/web`, `services/`, `shared/`.\n  - Configure `docker-compose.yml` for PostgreSQL and Redis.\n- **T-0.2: Shared Database & Migrations**\n  - Initialize Drizzle in `shared/db`.\n  - Define initial schema (Users, Roles, Assets, Tickets, etc.).\n  - Setup migration scripts and a seed script for an admin user.\n- **T-0.3: Shared Auth & RBAC Middleware**\n  - Implement JWT helpers (sign/verify) in `shared/auth`.\n  - Create Fastify middleware for role-based access control (`admin`, `it_staff`, `end_user`).\n- **T-0.4: Shared Notification Interface**\n  - Define `NotificationService` interface in `shared/notifications`.\n  - Implement a `ConsoleNotificationProvider` for development.\n\n### Epic 1: Authentication & Session Management\n- **T-1.1: Login API**\n  - `POST /api/v1/auth/login`: Validate credentials, issue tokens, argon2 verification.\n  - Rate limiting (per IP/username).\n- **T-1.2: Refresh & Logout**\n  - `POST /api/v1/auth/refresh`: Issue new access token using refresh token.\n  - `POST /api/v1/auth/logout`: Invalidate refresh token.\n\n### Epic 2: User Management (Admin Only)\n- **T-2.1: User CRUD API**\n  - `GET /api/v1/users`: Paginated list with search/filter.\n  - `POST /api/v1/users`: Create user with role assignment.\n  - `PATCH /api/v1/users/:id`: Update user details.\n  - `DELETE /api/v1/users/:id`: Soft delete.\n- **T-2.2: Audit Logging**\n  - Implement a shared audit subscriber to log all user mutations.\n\n### Epic 3: Asset Management\n- **T-3.1: Asset CRUD API**\n  - `GET/POST/PATCH/DELETE /api/v1/assets`.\n  - Fields: tag, type, serial, status, purchase date, warranty.\n- **T-3.2: Asset Assignment**\n  - `POST /api/v1/assets/:id/assign`: Link asset to a user.\n  - `POST /api/v1/assets/:id/unassign`: Return asset to stock.\n  - Maintain assignment history in `asset_assignments` table.\n\n### Epic 4: Ticketing System\n- **T-4.1: Ticket Submission & Lifecycle**\n  - `POST /api/v1/tickets`: End-user submission.\n  - `GET /api/v1/tickets`: Filtered list (Admin/IT see all, Users see own).\n  - `PATCH /api/v1/tickets/:id`: Update status, assignee, or add comments.\n- **T-4.2: IT Notifications**\n  - Integration with `NotificationService` to alert IT staff on new/updated tickets.\n\n### Epic 5: Reports & Analytics\n- **T-5.1: Analytics Endpoints**\n  - Generate data for: tickets by status, resolution times, asset utilization.\n  - Support date range filtering.\n- **T-5.2: Export Functionality**\n  - `GET /api/v1/reports/:id/export?format=csv|pdf`.\n\n### Epic 6: Network Monitoring & Alerts\n- **T-6.1: Device Registry API**\n  - CRUD for monitored network devices (host/IP, check interval).\n- **T-6.2: Health Check Worker**\n  - Implementation of BullMQ worker to poll devices (ICMP/TCP).\n  - Log results to `device_status_log`.\n- **T-6.3: Incident Alerting**\n  - Automatic creation of `alerts` when a device goes down.\n  - Notify IT staff via `NotificationService`.\n\n---\n\n## 🧪 Testing & Quality Assurance\n- **Unit Tests**: Business logic in `services/<module>/service.ts`.\n- **Integration Tests**: API endpoints using Supertest.\n- **CI/CD**: GitHub Actions pipeline for linting, typechecking, and testing.\n\n## 🚀 Execution Strategy\n1. **Initialize Epic 0** (Single agent to avoid conflicts).\n2. **Sequential Implementation of Epics 1 & 2**.\n3. **Parallel Implementation** of Epics 3-6 once foundations are solid.",
+        "number": 29,
+        "repository": "dev0nyn/it-management-system",
+        "title": "API Architecture Design & Documentation",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/29"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW-3E",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "API Architecture Design & Documentation"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Initialize backend project, frontend project, linter, formatter, CI config.\n- [ ] Add `docker-compose.yml` for DB + app for local dev.\n- [ ] Wire pre-commit hooks: lint, typecheck, test.\n\n### Acceptance Criteria\n- `docker compose up` brings up DB + empty API + empty frontend.\n- CI runs lint + typecheck + tests on PR and blocks on failure.\n- README documents local setup in ≤ 5 commands.\n",
+        "number": 30,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 0.1 — Repo scaffolding & tooling",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/30"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW_rE",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 0.1 — Repo scaffolding & tooling"
+    },
+    {
+      "content": {
+        "body": "### Tasks\n- [ ] Choose migration tool; create initial migration with tables: `users`, `roles`, `assets`, `asset_assignments`, `tickets`, `ticket_events`, `devices`, `device_status_log`, `alerts`, `audit_log`.\n- [ ] Seed script with one admin user.\n\n### Acceptance Criteria\n- `migrate up` / `migrate down` both succeed on empty DB.\n- Seed produces a loginable admin.\n- ER diagram committed to `docs/erd.md`.\n",
+        "number": 31,
+        "repository": "dev0nyn/it-management-system",
+        "title": "Story 0.2 — Database schema & migration framework",
+        "type": "Issue",
+        "url": "https://github.com/dev0nyn/it-management-system/issues/31"
+      },
+      "id": "PVTI_lAHOEFdtiM4BT6mRzgpW_sQ",
+      "repository": "https://github.com/dev0nyn/it-management-system",
+      "status": "Ready",
+      "title": "Story 0.2 — Database schema & migration framework"
+    }
+  ],
+  "totalCount": 80
+}
