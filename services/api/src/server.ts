@@ -1,4 +1,7 @@
 import Fastify, { FastifyInstance } from 'fastify'
+import cors from '@fastify/cors'
+import rateLimit from '@fastify/rate-limit'
+import helmet from '@fastify/helmet'
 import { sql } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { validateEnv } from './env.js'
@@ -20,6 +23,42 @@ export async function buildServer(): Promise<FastifyInstance> {
           : undefined,
     },
     genReqId: () => uuidv4(),
+  })
+
+  // Security headers
+  await server.register(helmet, { global: true })
+
+  // CORS
+  await server.register(cors, {
+    origin: env.CORS_ORIGIN,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  })
+
+  // Rate limiting — 100 req/min per IP globally
+  await server.register(rateLimit, {
+    max: 100,
+    timeWindow: '1 minute',
+  })
+
+  // Global error handler — { error: { code, message } } envelope
+  server.setErrorHandler((error, _request, reply) => {
+    const statusCode = error.statusCode ?? 500
+    reply.code(statusCode).send({
+      error: {
+        code: error.code ?? 'INTERNAL_ERROR',
+        message: error.message ?? 'An unexpected error occurred',
+      },
+    })
+  })
+
+  // Override default 404
+  server.setNotFoundHandler((_request, reply) => {
+    reply.code(404).send({
+      error: {
+        code: 'NOT_FOUND',
+        message: 'Route not found',
+      },
+    })
   })
 
   // Request latency tracking
