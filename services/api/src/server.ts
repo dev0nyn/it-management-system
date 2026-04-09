@@ -11,6 +11,7 @@ import { ticketsRoute } from './routes/tickets/tickets.js'
 import { auditRoute } from './routes/audit/audit.js'
 import { loginRoute } from './routes/auth/login.js'
 import { logoutRoute } from './routes/auth/logout.js'
+import { usersRoute } from './routes/users/users.js'
 
 export async function buildServer(): Promise<FastifyInstance> {
   const env = validateEnv()
@@ -87,6 +88,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   await server.register(assetAssignmentsRoute)
   await server.register(ticketsRoute)
   await server.register(auditRoute)
+  await server.register(usersRoute)
 
   server.get('/healthz', async () => {
     return { status: 'ok', timestamp: new Date().toISOString() }
