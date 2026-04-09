@@ -10,6 +10,7 @@ import { logoutRoute } from './routes/auth/logout.js'
 import { assetsRoute } from './routes/assets/assets.js'
 import { assetAssignmentsRoute } from './routes/assets/assignments.js'
 import { ticketsRoute } from './routes/tickets/tickets.js'
+import { auditRoute } from './routes/audit/audit.js'
 import { usersRoute } from './routes/users/users.js'
 
 export async function buildServer(): Promise<FastifyInstance> {
@@ -86,6 +87,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   await server.register(assetsRoute)
   await server.register(assetAssignmentsRoute)
   await server.register(ticketsRoute)
+  await server.register(auditRoute)
   await server.register(usersRoute)
 
   server.get('/healthz', async () => {
