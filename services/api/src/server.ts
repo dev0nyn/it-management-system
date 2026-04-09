@@ -5,6 +5,12 @@ import helmet from '@fastify/helmet'
 import { sql } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
 import { validateEnv } from './env.js'
+import { loginRoute } from './routes/auth/login.js'
+import { logoutRoute } from './routes/auth/logout.js'
+import { assetsRoute } from './routes/assets/assets.js'
+import { assetAssignmentsRoute } from './routes/assets/assignments.js'
+import { ticketsRoute } from './routes/tickets/tickets.js'
+import { usersRoute } from './routes/users/users.js'
 
 export async function buildServer(): Promise<FastifyInstance> {
   const env = validateEnv()
@@ -74,6 +80,13 @@ export async function buildServer(): Promise<FastifyInstance> {
     )
     done()
   })
+
+  await server.register(loginRoute)
+  await server.register(logoutRoute)
+  await server.register(assetsRoute)
+  await server.register(assetAssignmentsRoute)
+  await server.register(ticketsRoute)
+  await server.register(usersRoute)
 
   server.get('/healthz', async () => {
     return { status: 'ok', timestamp: new Date().toISOString() }
