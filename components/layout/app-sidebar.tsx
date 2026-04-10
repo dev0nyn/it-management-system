@@ -90,24 +90,31 @@ const systemNav = [
   },
 ];
 
-// Mock user — will be replaced with real auth
+// TODO (Story 1.1): Replace with real user from JWT claims — see PR #95/#96
 const mockUser = {
   name: "Admin User",
   email: "admin@example.com",
   role: "admin" as const,
 };
 
-export function AppSidebar() {
+type UserRole = "admin" | "it_staff" | "end_user";
+interface SidebarUser {
+  name: string;
+  email: string;
+  role: UserRole;
+}
+
+export function AppSidebar({ user = mockUser }: { user?: SidebarUser } = {}) {
   const pathname = usePathname();
   const router = useRouter();
 
   const isActive = (href: string) => pathname === href;
 
   const visibleManagementNav = managementNav.filter(
-    (item) => !item.roles || item.roles.includes(mockUser.role)
+    (item) => !item.roles || item.roles.includes(user.role)
   );
   const visibleSystemNav = systemNav.filter(
-    (item) => !item.roles || item.roles.includes(mockUser.role)
+    (item) => !item.roles || item.roles.includes(user.role)
   );
 
   const handleLogout = () => {
@@ -300,7 +307,7 @@ export function AppSidebar() {
                     <div className="relative">
                       <Avatar className="h-8 w-8 ring-2 ring-background shadow-sm">
                         <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-bold">
-                          {mockUser.name
+                          {user.name
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
@@ -311,10 +318,10 @@ export function AppSidebar() {
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold text-foreground">
-                        {mockUser.name}
+                        {user.name}
                       </span>
                       <span className="truncate text-[11px] text-muted-foreground/70">
-                        {mockUser.email}
+                        {user.email}
                       </span>
                     </div>
                     <ChevronUp className="ml-auto size-4 text-muted-foreground/50 transition-transform duration-200 group-data-[state=open]/user:rotate-180" />
@@ -330,7 +337,7 @@ export function AppSidebar() {
                 <div className="flex items-center gap-3 px-3 py-3">
                   <Avatar className="h-10 w-10 ring-2 ring-primary/10 shadow-sm">
                     <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-sm font-bold">
-                      {mockUser.name
+                      {user.name
                         .split(" ")
                         .map((n) => n[0])
                         .join("")}
@@ -338,16 +345,16 @@ export function AppSidebar() {
                   </Avatar>
                   <div className="grid flex-1 text-left leading-tight">
                     <span className="font-semibold text-sm">
-                      {mockUser.name}
+                      {user.name}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {mockUser.email}
+                      {user.email}
                     </span>
                     <Badge
                       variant="outline"
                       className="w-fit mt-1 text-[10px] px-1.5 py-0 font-medium border-primary/20 text-primary/80 bg-primary/5"
                     >
-                      {mockUser.role}
+                      {user.role}
                     </Badge>
                   </div>
                 </div>

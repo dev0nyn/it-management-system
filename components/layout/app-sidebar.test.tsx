@@ -52,19 +52,29 @@ vi.mock("@/components/ui/badge", () => ({
   Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }));
 
+const adminUser = { name: "Admin User", email: "admin@example.com", role: "admin" as const };
+const endUser = { name: "End User", email: "user@example.com", role: "end_user" as const };
+
 describe("AppSidebar RBAC filtering", () => {
   it("renders Dashboard and Tickets for all roles", () => {
-    render(<AppSidebar />);
+    render(<AppSidebar user={endUser} />);
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
     expect(screen.getByText("Tickets")).toBeInTheDocument();
   });
 
-  it("renders admin-only nav items when mockUser.role is admin", () => {
-    render(<AppSidebar />);
-    // admin sees Users, Assets, Reports, Monitoring
+  it("renders admin-only nav items for admin role", () => {
+    render(<AppSidebar user={adminUser} />);
     expect(screen.getByText("Users")).toBeInTheDocument();
     expect(screen.getByText("Assets")).toBeInTheDocument();
     expect(screen.getByText("Reports")).toBeInTheDocument();
     expect(screen.getByText("Monitoring")).toBeInTheDocument();
+  });
+
+  it("hides Users, Assets, Reports, Monitoring for end_user role", () => {
+    render(<AppSidebar user={endUser} />);
+    expect(screen.queryByText("Users")).not.toBeInTheDocument();
+    expect(screen.queryByText("Assets")).not.toBeInTheDocument();
+    expect(screen.queryByText("Reports")).not.toBeInTheDocument();
+    expect(screen.queryByText("Monitoring")).not.toBeInTheDocument();
   });
 });
