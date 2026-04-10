@@ -10,8 +10,8 @@ Configure these in Settings → Secrets and variables → Actions:
 
 ## Railway
 
-- `RAILWAY_TOKEN` — API token from railway.app/account/tokens
-- `RAILWAY_SERVICE_ID` — Service ID from Railway project settings
+- `RAILWAY_API_TOKEN` — API token from railway.app/account/tokens
+- `RAILWAY_PROJECT_ID` — Project ID from Railway project settings (Settings → General)
 - `RAILWAY_API_URL` — Public URL of deployed API (e.g. https://api.yourapp.railway.app)
 
 ## Vercel

@@ -28,8 +28,8 @@ jobs:
       - name: Deploy to Railway
         uses: bervProject/railway-deploy@main
         with:
-          railway_token: ${{ secrets.RAILWAY_TOKEN }}
-          service: ${{ secrets.RAILWAY_SERVICE_ID }}
+          railway_token: ${{ secrets.RAILWAY_API_TOKEN }}
+          service: ${{ secrets.RAILWAY_PROJECT_ID }}
       - name: API health check
         run: |
           sleep 15
