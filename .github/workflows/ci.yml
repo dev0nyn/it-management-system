@@ -35,4 +35,4 @@ jobs:
         run: pnpm run lint
         
       - name: Test
-        run: pnpm --filter @it-mgmt/api run test:unit -- --coverage
+        run: pnpm --filter @it-management/api run test:unit -- --coverage
