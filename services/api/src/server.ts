@@ -12,6 +12,7 @@ import { assetAssignmentsRoute } from './routes/assets/assignments.js'
 import { ticketsRoute } from './routes/tickets/tickets.js'
 import { auditRoute } from './routes/audit/audit.js'
 import { usersRoute } from './routes/users/users.js'
+import { devicesRoute } from './routes/devices/devices.js'
 
 export async function buildServer(): Promise<FastifyInstance> {
   const env = validateEnv()
@@ -89,6 +90,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   await server.register(ticketsRoute)
   await server.register(auditRoute)
   await server.register(usersRoute)
+  await server.register(devicesRoute)
 
   server.get('/healthz', async () => {
     return { status: 'ok', timestamp: new Date().toISOString() }
