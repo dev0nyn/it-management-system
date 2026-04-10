@@ -25,10 +25,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // TODO (Story 1.1): Replace mock_token with real JWT verification.
-  // Real auth is implemented in PR #95 (auth backend) and PR #96 (login UI).
-  // Until merged, any request with mock_token=1 bypasses auth — do NOT ship to prod as-is.
-  const token = request.cookies.get("mock_token")?.value;
+  const token = request.cookies.get("session")?.value;
   if (!token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("from", pathname);
