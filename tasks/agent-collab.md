@@ -50,7 +50,7 @@ Single source of truth for which agent owns which ticket. **Read this file befor
 ## In Progress
 | Ticket | Agent | Branch | Claimed At | Notes |
 |--------|-------|--------|------------|-------|
-| T-2.2 | claude-sonnet-4-6 | feature/story-2.2-users-ui | 2026-04-10T00:00:00Z | User management UI |
+| T-2.2 | claude-sonnet-4-6 | feature/story-2.2-users-ui | 2026-04-10T00:00:00Z | Ready for QA — PR #102 |
 
 ## Done
 | Ticket | Agent | PR | Merged At |
