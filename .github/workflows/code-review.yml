@@ -158,7 +158,7 @@ jobs:
               coverageComment += `| Statements | ${badge(statements)} ${statements}% |\n`;
 
               if (lines < 60) {
-                coverageComment += '\n> ⚠️ Coverage below 60% — consider adding tests for new code.\n';
+                coverageComment += '\n> Warning: Coverage below 60% -- consider adding tests for new code.\n';
               }
             } catch (e) {
               coverageComment += '_Coverage report not available (no tests ran or coverage not configured)._\n';
