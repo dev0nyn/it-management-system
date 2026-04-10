@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Ignore claude agent worktrees and unrelated services
+    ".claude/**",
+    "services/**",
+    "apps/**",
+    "shared/**",
   ]),
 ]);
 

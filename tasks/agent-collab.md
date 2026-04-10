@@ -28,7 +28,7 @@ Single source of truth for which agent owns which ticket. **Read this file befor
 | T-1.2 | 1 | Dashboard shell & nav | auth | |
 | T-1.3 | 1 | Logout endpoint | auth | |
 | T-2.1 | 2 | CRUD users API | users | |
-| T-2.2 | 2 | User management UI | users | |
+| ~~T-2.2~~ | ~~2~~ | ~~User management UI~~ | ~~users~~ | moved to In Progress |
 | T-2.3 | 2 | Audit logging for user changes | users | |
 | T-3.1 | 3 | CRUD assets API | assets | |
 | T-3.2 | 3 | Assign/unassign asset | assets | |
@@ -50,7 +50,7 @@ Single source of truth for which agent owns which ticket. **Read this file befor
 ## In Progress
 | Ticket | Agent | Branch | Claimed At | Notes |
 |--------|-------|--------|------------|-------|
-| _(none yet)_ | | | | |
+| T-2.2 | claude-sonnet-4-6 | feature/story-2.2-users-ui | 2026-04-10T00:00:00Z | User management UI |
 
 ## Done
 | Ticket | Agent | PR | Merged At |
