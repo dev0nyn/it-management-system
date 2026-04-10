@@ -2,9 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 'feature/**' ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   validate:
@@ -34,4 +35,4 @@ jobs:
         run: pnpm run lint
         
       - name: Test
-        run: pnpm run test:unit
+        run: pnpm --filter @it-management/api run test:unit -- --coverage
