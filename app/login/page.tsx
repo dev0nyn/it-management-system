@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Shield, Eye, EyeOff, Loader2 } from "lucide-react";
 import Image from "next/image";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -14,12 +16,19 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) return;
     setLoading(true);
-    // Mock login — will be replaced with real auth (Story 1.1 backend)
-    // Set a session cookie so middleware can protect routes
+    // Mock login — Story 1.1 will replace this with:
+    // const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ email, password }),
+    // });
+    // const { token } = await res.json();
+    // document.cookie = `mock_token=${token}; path=/; max-age=86400; SameSite=Lax`;
     document.cookie = "mock_token=1; path=/; max-age=86400; SameSite=Lax";
     setTimeout(() => {
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     }, 1500);
   };
 
