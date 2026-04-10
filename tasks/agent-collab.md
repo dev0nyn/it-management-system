@@ -55,7 +55,7 @@ Single source of truth for which agent owns which ticket. **Read this file befor
 ## Done
 | Ticket | Agent | PR | Merged At |
 |--------|-------|----|-----------|
-| _(none yet)_ | | | |
+| T-1.2 | Nino | [#98](https://github.com/dev0nyn/it-management-system/pull/98) | 2026-04-10 |
 
 ## Shared Resource Claims
 Active exclusive claims on `shared/` paths. Release as soon as your PR is merged.
