@@ -15,7 +15,7 @@ export async function createAsset(data: {
   tag: string
   type: string
   serialNumber?: string
-  status?: 'available' | 'assigned' | 'maintenance' | 'retired'
+  status?: 'in_stock' | 'assigned' | 'repair' | 'retired'
   purchaseDate?: Date
   warrantyExpiry?: Date
 }) {
@@ -29,7 +29,7 @@ export async function updateAsset(
     tag: string
     type: string
     serialNumber: string
-    status: 'available' | 'assigned' | 'maintenance' | 'retired'
+    status: 'in_stock' | 'assigned' | 'repair' | 'retired'
     purchaseDate: Date
     warrantyExpiry: Date
   }>,

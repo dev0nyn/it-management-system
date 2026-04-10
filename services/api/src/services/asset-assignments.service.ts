@@ -21,7 +21,7 @@ export async function unassignAsset(assetId: number) {
     .update(assetAssignments)
     .set({ returnedAt: now })
     .where(eq(assetAssignments.assetId, assetId))
-  await db.update(assets).set({ status: 'available', updatedAt: now }).where(eq(assets.id, assetId))
+  await db.update(assets).set({ status: 'in_stock', updatedAt: now }).where(eq(assets.id, assetId))
   return { assetId, returnedAt: now }
 }
 

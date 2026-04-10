@@ -6,7 +6,7 @@ interface CreateAssetBody {
   tag: string
   type: string
   serialNumber?: string
-  status?: 'available' | 'assigned' | 'maintenance' | 'retired'
+  status?: 'in_stock' | 'assigned' | 'repair' | 'retired'
   purchaseDate?: Date
   warrantyExpiry?: Date
 }
@@ -15,7 +15,7 @@ interface UpdateAssetBody {
   tag?: string
   type?: string
   serialNumber?: string
-  status?: 'available' | 'assigned' | 'maintenance' | 'retired'
+  status?: 'in_stock' | 'assigned' | 'repair' | 'retired'
   purchaseDate?: Date
   warrantyExpiry?: Date
 }
@@ -44,7 +44,7 @@ export async function assetsRoute(app: FastifyInstance) {
             tag: { type: 'string' },
             type: { type: 'string' },
             serialNumber: { type: 'string' },
-            status: { type: 'string', enum: ['available', 'assigned', 'maintenance', 'retired'] },
+            status: { type: 'string', enum: ['in_stock', 'assigned', 'repair', 'retired'] },
           },
         },
       },

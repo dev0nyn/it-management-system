@@ -7,7 +7,7 @@
     "migrate:up": "tsx src/migrate.ts",
     "migrate:down": "echo 'Down migrations are manual in Drizzle; dropping schema locally' && tsx src/migrate-down.ts",
     "seed": "tsx src/seed.ts",
-    "lint": "eslint \"src/**/*.ts\"",
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit",
     "test:unit": "echo 'No tests yet'"
   },
