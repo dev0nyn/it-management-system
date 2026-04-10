@@ -67,6 +67,23 @@ describe('GET /api/v1/users', () => {
     expect(body[0]).toHaveProperty('id')
     expect(body[0]).not.toHaveProperty('passwordHash')
   })
+
+  it('passes page and limit query params to listUsers', async () => {
+    const listUsers = vi.fn().mockResolvedValue([STUB_USER])
+    vi.doMock('../../services/users.service.js', () => ({ listUsers }))
+    vi.doMock('../../db/client.js', () => ({ db: { execute: vi.fn().mockResolvedValue([]) } }))
+    const { buildServer } = await import('../../server.js')
+    const { signToken } = await import('../../auth/jwt.js')
+    const token = signToken({ userId: 1, role: 'admin' })
+    const app = await buildServer()
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/users?page=2&limit=5',
+      headers: { authorization: `Bearer ${token}` },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(listUsers).toHaveBeenCalledWith(2, 5)
+  })
 })
 
 describe('GET /api/v1/users/:id', () => {
@@ -146,6 +163,27 @@ describe('POST /api/v1/users', () => {
       payload: { password: 'SecurePass1!', role: 'end_user' },
     })
     expect(res.statusCode).toBe(400)
+  })
+
+  it('returns 409 on duplicate email', async () => {
+    const conflictErr = Object.assign(new Error('Email already in use'), { code: 'CONFLICT' })
+    vi.doMock('../../services/users.service.js', () => ({
+      createUser: vi.fn().mockRejectedValue(conflictErr),
+    }))
+    vi.doMock('../../db/client.js', () => ({ db: { execute: vi.fn().mockResolvedValue([]) } }))
+    const { buildServer } = await import('../../server.js')
+    const { signToken } = await import('../../auth/jwt.js')
+    const token = signToken({ userId: 1, role: 'admin' })
+    const app = await buildServer()
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/users',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { email: 'dup@test.local', password: 'SecurePass1!', role: 'end_user' },
+    })
+    expect(res.statusCode).toBe(409)
+    const body = JSON.parse(res.payload)
+    expect(body.error.code).toBe('CONFLICT')
   })
 
   it('returns 400 on invalid role', async () => {

@@ -4,7 +4,8 @@ import { db } from '../db/index.js'
 import { users } from '../db/index.js'
 import type { Role } from '../auth/index.js'
 
-export async function listUsers() {
+export async function listUsers(page = 1, limit = 20) {
+  const offset = (page - 1) * limit
   return db
     .select({
       id: users.id,
@@ -14,6 +15,8 @@ export async function listUsers() {
       createdAt: users.createdAt,
     })
     .from(users)
+    .limit(limit)
+    .offset(offset)
 }
 
 export async function getUserById(id: number) {
@@ -32,11 +35,18 @@ export async function getUserById(id: number) {
 
 export async function createUser(data: { email: string; password: string; role: Role }) {
   const passwordHash = await bcrypt.hash(data.password, 12)
-  const [user] = await db
-    .insert(users)
-    .values({ email: data.email, passwordHash, role: data.role })
-    .returning({ id: users.id, email: users.email, role: users.role })
-  return user
+  try {
+    const [user] = await db
+      .insert(users)
+      .values({ email: data.email, passwordHash, role: data.role })
+      .returning({ id: users.id, email: users.email, role: users.role })
+    return user
+  } catch (err: unknown) {
+    if (err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === '23505') {
+      throw Object.assign(new Error('Email already in use'), { statusCode: 409, code: 'CONFLICT' })
+    }
+    throw err
+  }
 }
 
 export async function updateUser(

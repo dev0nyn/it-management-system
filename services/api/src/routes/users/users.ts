@@ -19,7 +19,10 @@ export async function usersRoute(app: FastifyInstance) {
   // All users routes are admin-only
   app.addHook('preHandler', requireRole('admin'))
 
-  app.get('/api/v1/users', async () => UsersService.listUsers())
+  app.get('/api/v1/users', async (request) => {
+    const { page, limit } = request.query as { page?: string; limit?: string }
+    return UsersService.listUsers(page ? parseInt(page, 10) : 1, limit ? parseInt(limit, 10) : 20)
+  })
 
   app.get('/api/v1/users/:id', async (request, reply) => {
     const { id } = request.params as { id: string }
@@ -45,8 +48,15 @@ export async function usersRoute(app: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const user = await UsersService.createUser(request.body)
-      return reply.code(201).send(user)
+      try {
+        const user = await UsersService.createUser(request.body)
+        return reply.code(201).send(user)
+      } catch (err: unknown) {
+        if (err instanceof Error && (err as { code?: string }).code === 'CONFLICT') {
+          return reply.code(409).send({ error: { code: 'CONFLICT', message: err.message } })
+        }
+        throw err
+      }
     },
   )
 
