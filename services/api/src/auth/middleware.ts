@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { verifyToken, type Role, type JwtPayload } from './jwt.js'
+import { isTokenDenied } from './denylist.js'
 
 export function requireRole(...allowedRoles: Role[]) {
   return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
@@ -12,6 +13,14 @@ export function requireRole(...allowedRoles: Role[]) {
     }
 
     const token = authHeader.slice(7)
+
+    if (isTokenDenied(token)) {
+      reply.code(401).send({
+        error: { code: 'UNAUTHORIZED', message: 'Token has been revoked' },
+      })
+      return
+    }
+
     let payload
     try {
       payload = verifyToken(token)
