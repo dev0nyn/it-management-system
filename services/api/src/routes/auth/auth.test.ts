@@ -153,8 +153,12 @@ describe('POST /api/v1/auth/logout', () => {
   beforeEach(() => vi.resetModules())
 
   it('returns 200 with valid token', async () => {
+    const insertValues = vi.fn().mockResolvedValue([])
     vi.doMock('../../db/client.js', () => ({
-      db: { execute: vi.fn().mockResolvedValue([]) },
+      db: {
+        execute: vi.fn().mockResolvedValue([]),
+        insert: vi.fn().mockReturnValue({ values: insertValues }),
+      },
     }))
 
     const { buildServer } = await import('../../server.js')
@@ -173,7 +177,10 @@ describe('POST /api/v1/auth/logout', () => {
 
   it('returns 401 without token', async () => {
     vi.doMock('../../db/client.js', () => ({
-      db: { execute: vi.fn().mockResolvedValue([]) },
+      db: {
+        execute: vi.fn().mockResolvedValue([]),
+        insert: vi.fn().mockReturnValue({ values: vi.fn().mockResolvedValue([]) }),
+      },
     }))
 
     const { buildServer } = await import('../../server.js')
@@ -181,5 +188,37 @@ describe('POST /api/v1/auth/logout', () => {
     const res = await app.inject({ method: 'POST', url: '/api/v1/auth/logout' })
 
     expect(res.statusCode).toBe(401)
+  })
+
+  it('revoked token cannot access protected routes after logout', async () => {
+    const insertValues = vi.fn().mockResolvedValue([])
+    vi.doMock('../../db/client.js', () => ({
+      db: {
+        execute: vi.fn().mockResolvedValue([]),
+        insert: vi.fn().mockReturnValue({ values: insertValues }),
+      },
+    }))
+
+    const { buildServer } = await import('../../server.js')
+    const { signToken } = await import('../../auth/jwt.js')
+    const token = signToken({ userId: 1, role: 'admin' })
+    const app = await buildServer()
+
+    // Logout — should succeed
+    const logoutRes = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/logout',
+      headers: { authorization: `Bearer ${token}` },
+    })
+    expect(logoutRes.statusCode).toBe(200)
+
+    // Use the same token on a protected route — should be denied
+    const afterRes = await app.inject({
+      method: 'GET',
+      url: '/api/v1/users',
+      headers: { authorization: `Bearer ${token}` },
+    })
+    expect(afterRes.statusCode).toBe(401)
+    expect(JSON.parse(afterRes.payload).error.message).toBe('Token has been revoked')
   })
 })
