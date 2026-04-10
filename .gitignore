@@ -39,6 +39,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# lock file — project uses pnpm (pnpm-lock.yaml); npm's lock file causes drift
-package-lock.json
