@@ -13,23 +13,30 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
     setLoading(true);
-    // Mock login — Story 1.1 will replace this with:
-    // const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ email, password }),
-    // });
-    // const { token } = await res.json();
-    // document.cookie = `mock_token=${token}; path=/; max-age=86400; SameSite=Lax`;
-    document.cookie = "mock_token=1; path=/; max-age=86400; SameSite=Lax";
-    setTimeout(() => {
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error?.message ?? "Invalid credentials");
+        setLoading(false);
+        return;
+      }
       router.push("/dashboard");
-    }, 1500);
+    } catch {
+      setError("Network error — please try again");
+      setLoading(false);
+    }
   };
 
   return (
@@ -131,6 +138,12 @@ export default function LoginPage() {
                 "Sign in"
               )}
             </Button>
+
+            {error && (
+              <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+                {error}
+              </p>
+            )}
           </form>
 
           <div className="mt-6 pt-6 border-t border-slate-100 dark:border-white/5">

@@ -15,9 +15,9 @@ describe("middleware auth guard", () => {
     expect(res.headers.get("location")).toContain("from=%2Fdashboard");
   });
 
-  it("passes through when mock_token cookie is present", () => {
+  it("passes through when session cookie is present", () => {
     const req = new NextRequest("http://localhost/dashboard");
-    req.cookies.set("mock_token", "1");
+    req.cookies.set("session", "some-jwt-value");
     const res = middleware(req);
     expect(res.status).toBe(200);
   });
