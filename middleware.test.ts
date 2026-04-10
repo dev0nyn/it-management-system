@@ -16,8 +16,9 @@ describe("middleware auth guard", () => {
   });
 
   it("passes through when session cookie is present", () => {
-    const req = new NextRequest("http://localhost/dashboard");
-    req.cookies.set("session", "some-jwt-value");
+    const req = new NextRequest("http://localhost/dashboard", {
+      headers: { cookie: "session=some-jwt-value" },
+    });
     const res = middleware(req);
     expect(res.status).toBe(200);
   });
