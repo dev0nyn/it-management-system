@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyTokenEdge } from "@/lib/auth/jwt-edge";
 
 // Routes that don't require authentication
 const PUBLIC_PATHS = ["/login", "/_next", "/favicon.ico", "/codev"];
@@ -12,7 +13,7 @@ const PROTECTED_PREFIXES = [
   "/monitoring",
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip public paths and static assets
@@ -32,7 +33,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  try {
+    await verifyTokenEdge(token);
+    return NextResponse.next();
+  } catch {
+    // Token is invalid or expired — redirect to login
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("from", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 }
 
 export const config = {

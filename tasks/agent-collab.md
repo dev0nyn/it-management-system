@@ -50,7 +50,7 @@ Single source of truth for which agent owns which ticket. **Read this file befor
 ## In Progress
 | Ticket | Agent | Branch | Claimed At | Notes |
 |--------|-------|--------|------------|-------|
-| _(none yet)_ | | | | |
+| T-1.1 | software-developer | feature/story-1.1-middleware-jwt (stacked) | 2026-04-11T00:00:00Z | 6-branch stack: middleware JWT, login validation, seed, me tests, session context, sidebar wiring |
 
 ## Done
 | Ticket | Agent | PR | Merged At |
