@@ -1,17 +1,17 @@
-import { middleware } from "./middleware";
+import { proxy } from "./proxy";
 import { NextRequest } from "next/server";
 
-describe("middleware auth guard", () => {
+describe("proxy auth guard", () => {
   it("redirects unauthenticated requests to /login", () => {
     const req = new NextRequest("http://localhost/dashboard");
-    const res = middleware(req);
+    const res = proxy(req);
     expect(res.status).toBe(307);
     expect(res.headers.get("location")).toContain("/login");
   });
 
   it("preserves the original path in the `from` query param", () => {
     const req = new NextRequest("http://localhost/dashboard");
-    const res = middleware(req);
+    const res = proxy(req);
     expect(res.headers.get("location")).toContain("from=%2Fdashboard");
   });
 
@@ -19,19 +19,19 @@ describe("middleware auth guard", () => {
     const req = new NextRequest("http://localhost/dashboard", {
       headers: { cookie: "session=some-jwt-value" },
     });
-    const res = middleware(req);
+    const res = proxy(req);
     expect(res.status).toBe(200);
   });
 
   it("does not redirect /login (public path)", () => {
     const req = new NextRequest("http://localhost/login");
-    const res = middleware(req);
+    const res = proxy(req);
     expect(res.status).toBe(200);
   });
 
   it("does not redirect unprotected paths", () => {
     const req = new NextRequest("http://localhost/some-other-page");
-    const res = middleware(req);
+    const res = proxy(req);
     expect(res.status).toBe(200);
   });
 
@@ -39,7 +39,7 @@ describe("middleware auth guard", () => {
     "protects %s without a token",
     (path) => {
       const req = new NextRequest(`http://localhost${path}`);
-      const res = middleware(req);
+      const res = proxy(req);
       expect(res.status).toBe(307);
     }
   );
