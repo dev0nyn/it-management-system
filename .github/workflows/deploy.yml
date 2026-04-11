@@ -65,9 +65,9 @@ jobs:
         run: |
           DEPLOY_OUTPUT=$(vercel deploy --prod --prebuilt --token ${{ secrets.VERCEL_TOKEN }} 2>&1)
           echo "$DEPLOY_OUTPUT"
-          # Extract the stable production alias (last https://*.vercel.app URL in output)
-          # The unique deployment URL appears first; the alias (Aliased: ...) appears last
-          VERCEL_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[^ ]+\.vercel\.app' | tail -1)
+          # Capture the unique deployment URL (Production: line) — this URL always has
+          # the current deployment's routes. The alias URL may point to a different project.
+          VERCEL_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-z0-9-]+-[a-z0-9]+-rinehardramos-projects\.vercel\.app' | head -1)
           echo "vercel_url=$VERCEL_URL" >> $GITHUB_OUTPUT
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -97,7 +97,10 @@ jobs:
         run: sleep 15
 
       - name: Healthcheck — Vercel
-        run: curl --fail --max-time 10 --retry 3 --retry-delay 5 "${{ needs.deploy-web.outputs.vercel_url }}/api/healthz"
+        run: |
+          curl --fail --max-time 10 --retry 3 --retry-delay 5 \
+            -H "x-vercel-protection-bypass: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}" \
+            "${{ needs.deploy-web.outputs.vercel_url }}/api/healthz"
 
       - name: Healthcheck — Railway
         run: curl --fail --max-time 10 --retry 3 --retry-delay 5 "${{ secrets.RAILWAY_API_URL }}/api/healthz"
