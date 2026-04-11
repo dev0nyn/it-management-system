@@ -1,21 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import argon2 from "argon2";
+import { findByEmail } from "@/lib/users/repository";
+import { signToken } from "@/lib/auth/jwt";
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json();
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
-  const upstream = await fetch(`${apiUrl}/api/v1/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
+  const user = await findByEmail(email);
 
-  if (!upstream.ok) {
-    const err = await upstream.json();
-    return NextResponse.json(err, { status: upstream.status });
+  if (!user || user.deletedAt) {
+    return NextResponse.json(
+      { error: { code: "INVALID_CREDENTIALS", message: "Invalid email or password" } },
+      { status: 401 }
+    );
   }
 
-  const { token } = await upstream.json();
+  const valid = await argon2.verify(user.passwordHash, password);
+  if (!valid) {
+    return NextResponse.json(
+      { error: { code: "INVALID_CREDENTIALS", message: "Invalid email or password" } },
+      { status: 401 }
+    );
+  }
+
+  const token = signToken({ id: user.id, email: user.email, role: user.role });
 
   const res = NextResponse.json({ ok: true });
   res.cookies.set("session", token, {
@@ -23,7 +31,7 @@ export async function POST(req: NextRequest) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 7,
   });
   return res;
 }
