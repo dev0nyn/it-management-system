@@ -39,20 +39,21 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build Next.js app
-        run: npm run build
-        env:
-          # Suppress telemetry during CI build
-          NEXT_TELEMETRY_DISABLED: 1
-
       - name: Install Vercel CLI
         run: npm install -g vercel
 
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build with Vercel CLI (generates .vercel/output)
+        run: vercel build --prod --token ${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          NEXT_TELEMETRY_DISABLED: 1
+
       - name: Deploy pre-built output to Vercel (production)
-        run: npx vercel --prod --prebuilt --token ${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prod --prebuilt --token ${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
