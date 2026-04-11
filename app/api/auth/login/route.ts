@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { NextRequest, NextResponse } from "next/server";
 import argon2 from "argon2";
 import { findByEmail } from "@/lib/users/repository";
