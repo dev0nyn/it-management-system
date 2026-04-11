@@ -1,5 +1,5 @@
 {
-  "framework": "nextjs",
+  "outputDirectory": ".next",
   "headers": [
     {
       "source": "/api/healthz",
