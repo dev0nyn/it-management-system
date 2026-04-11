@@ -2,13 +2,11 @@ import { render, screen } from "@testing-library/react";
 import { AppSidebar } from "./app-sidebar";
 import { vi } from "vitest";
 
-// Mock next/navigation
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard",
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-// Mock next/image
 vi.mock("next/image", () => ({
   default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
     // eslint-disable-next-line @next/next/no-img-element
@@ -16,7 +14,6 @@ vi.mock("next/image", () => ({
   ),
 }));
 
-// Mock shadcn sidebar — it uses ResizeObserver + CSS vars not available in jsdom
 vi.mock("@/components/ui/sidebar", () => ({
   Sidebar: ({ children }: { children: React.ReactNode }) => <nav>{children}</nav>,
   SidebarContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -52,18 +49,31 @@ vi.mock("@/components/ui/badge", () => ({
   Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
 }));
 
-const adminUser = { name: "Admin User", email: "admin@example.com", role: "admin" as const };
-const endUser = { name: "End User", email: "user@example.com", role: "end_user" as const };
+vi.mock("@/components/ui/skeleton", () => ({
+  Skeleton: () => <div data-testid="skeleton" />,
+}));
+
+vi.mock("@/lib/auth/use-session", () => ({
+  useSession: vi.fn(),
+}));
+
+import { useSession } from "@/lib/auth/use-session";
+const mockUseSession = vi.mocked(useSession);
+
+const adminUser = { id: "1", name: "Admin User", email: "admin@example.com", role: "admin" as const };
+const endUser = { id: "2", name: "End User", email: "user@example.com", role: "end_user" as const };
 
 describe("AppSidebar RBAC filtering", () => {
   it("renders Dashboard and Tickets for all roles", () => {
-    render(<AppSidebar user={endUser} />);
+    mockUseSession.mockReturnValue({ user: endUser, loading: false });
+    render(<AppSidebar />);
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
     expect(screen.getByText("Tickets")).toBeInTheDocument();
   });
 
   it("renders admin-only nav items for admin role", () => {
-    render(<AppSidebar user={adminUser} />);
+    mockUseSession.mockReturnValue({ user: adminUser, loading: false });
+    render(<AppSidebar />);
     expect(screen.getByText("Users")).toBeInTheDocument();
     expect(screen.getByText("Assets")).toBeInTheDocument();
     expect(screen.getByText("Reports")).toBeInTheDocument();
@@ -71,7 +81,8 @@ describe("AppSidebar RBAC filtering", () => {
   });
 
   it("hides Users, Assets, Reports, Monitoring for end_user role", () => {
-    render(<AppSidebar user={endUser} />);
+    mockUseSession.mockReturnValue({ user: endUser, loading: false });
+    render(<AppSidebar />);
     expect(screen.queryByText("Users")).not.toBeInTheDocument();
     expect(screen.queryByText("Assets")).not.toBeInTheDocument();
     expect(screen.queryByText("Reports")).not.toBeInTheDocument();

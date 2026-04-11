@@ -10,7 +10,6 @@ import {
   Settings,
   LogOut,
   ChevronUp,
-
   Sparkles,
 } from "lucide-react";
 import {
@@ -36,9 +35,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth/use-session";
 
 const mainNav = [
   {
@@ -90,41 +91,31 @@ const systemNav = [
   },
 ];
 
-// TODO (Story 1.1): Replace with real user from JWT claims — see PR #95/#96
-const mockUser = {
-  name: "Admin User",
-  email: "admin@example.com",
-  role: "admin" as const,
-};
-
 type UserRole = "admin" | "it_staff" | "end_user";
-interface SidebarUser {
-  name: string;
-  email: string;
-  role: UserRole;
-}
 
-export function AppSidebar({ user = mockUser }: { user?: SidebarUser } = {}) {
+export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { user, loading } = useSession();
+
+  const role: UserRole = user?.role ?? "end_user";
 
   const isActive = (href: string) => pathname === href;
 
   const visibleManagementNav = managementNav.filter(
-    (item) => !item.roles || item.roles.includes(user.role)
+    (item) => !item.roles || item.roles.includes(role)
   );
   const visibleSystemNav = systemNav.filter(
-    (item) => !item.roles || item.roles.includes(user.role)
+    (item) => !item.roles || item.roles.includes(role)
   );
 
-  const handleLogout = () => {
-    document.cookie = "mock_token=; path=/; max-age=0; SameSite=Lax";
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
   };
 
   return (
     <Sidebar variant="inset" collapsible="icon">
-      {/* ── Branding Header ── */}
       <SidebarHeader className="pb-0">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -150,7 +141,6 @@ export function AppSidebar({ user = mockUser }: { user?: SidebarUser } = {}) {
       <SidebarSeparator className="mx-3 my-2 opacity-50" />
 
       <SidebarContent>
-        {/* ── Overview Section ── */}
         <SidebarGroup>
           <SidebarGroupLabel className="px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
             Overview
@@ -194,7 +184,6 @@ export function AppSidebar({ user = mockUser }: { user?: SidebarUser } = {}) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* ── Management Section ── */}
         <SidebarGroup>
           <SidebarGroupLabel className="px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
             Management
@@ -233,7 +222,6 @@ export function AppSidebar({ user = mockUser }: { user?: SidebarUser } = {}) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* ── System Section ── */}
         <SidebarGroup>
           <SidebarGroupLabel className="px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
             System
@@ -272,7 +260,6 @@ export function AppSidebar({ user = mockUser }: { user?: SidebarUser } = {}) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* ── Quick Actions Card ── */}
         <div className="mt-auto px-3 pb-2 group-data-[collapsible=icon]:hidden">
           <div className="rounded-xl border border-primary/10 bg-gradient-to-br from-primary/5 via-primary/3 to-transparent p-3">
             <div className="flex items-center gap-2 mb-1.5">
@@ -292,87 +279,99 @@ export function AppSidebar({ user = mockUser }: { user?: SidebarUser } = {}) {
         </div>
       </SidebarContent>
 
-      {/* ── User Footer ── */}
       <SidebarSeparator className="mx-3 opacity-50" />
       <SidebarFooter className="pb-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <SidebarMenuButton
-                    size="lg"
-                    className="group/user data-[state=open]:bg-accent/80 hover:bg-accent/60 transition-all duration-200"
-                  >
-                    <div className="relative">
-                      <Avatar className="h-8 w-8 ring-2 ring-background shadow-sm">
-                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-bold">
-                          {user.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      {/* Online status indicator */}
-                      <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-sidebar bg-emerald-500 shadow-sm shadow-emerald-500/40" />
-                    </div>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold text-foreground">
-                        {user.name}
-                      </span>
-                      <span className="truncate text-[11px] text-muted-foreground/70">
-                        {user.email}
-                      </span>
-                    </div>
-                    <ChevronUp className="ml-auto size-4 text-muted-foreground/50 transition-transform duration-200 group-data-[state=open]/user:rotate-180" />
-                  </SidebarMenuButton>
-                }
-              />
-              <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl shadow-lg border-border/50"
-                side="top"
-                align="start"
-                sideOffset={8}
-              >
-                <div className="flex items-center gap-3 px-3 py-3">
-                  <Avatar className="h-10 w-10 ring-2 ring-primary/10 shadow-sm">
-                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-sm font-bold">
-                      {user.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="grid flex-1 text-left leading-tight">
-                    <span className="font-semibold text-sm">
-                      {user.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {user.email}
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className="w-fit mt-1 text-[10px] px-1.5 py-0 font-medium border-primary/20 text-primary/80 bg-primary/5"
-                    >
-                      {user.role}
-                    </Badge>
-                  </div>
+            {loading ? (
+              <div className="flex items-center gap-3 px-2 py-2">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-2.5 w-32" />
                 </div>
-                <DropdownMenuSeparator className="bg-border/50" />
-                <DropdownMenuItem className="gap-2 px-3 py-2 cursor-pointer rounded-lg mx-1 my-0.5">
-                  <Settings className="h-4 w-4 text-muted-foreground" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-border/50" />
-                <DropdownMenuItem
-                  className="gap-2 px-3 py-2 cursor-pointer text-destructive focus:text-destructive rounded-lg mx-1 my-0.5"
-                  onClick={handleLogout}
+              </div>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <SidebarMenuButton
+                      size="lg"
+                      className="group/user data-[state=open]:bg-accent/80 hover:bg-accent/60 transition-all duration-200"
+                    >
+                      <div className="relative">
+                        <Avatar className="h-8 w-8 ring-2 ring-background shadow-sm">
+                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-bold">
+                            {(user?.name ?? user?.email ?? "U")
+                              .split(" ")
+                              .map((n: string) => n[0])
+                              .join("")
+                              .toUpperCase()
+                              .slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-sidebar bg-emerald-500 shadow-sm shadow-emerald-500/40" />
+                      </div>
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <span className="truncate font-semibold text-foreground">
+                          {user?.name ?? user?.email ?? "Unknown"}
+                        </span>
+                        <span className="truncate text-[11px] text-muted-foreground/70">
+                          {user?.email ?? ""}
+                        </span>
+                      </div>
+                      <ChevronUp className="ml-auto size-4 text-muted-foreground/50 transition-transform duration-200 group-data-[state=open]/user:rotate-180" />
+                    </SidebarMenuButton>
+                  }
+                />
+                <DropdownMenuContent
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl shadow-lg border-border/50"
+                  side="top"
+                  align="start"
+                  sideOffset={8}
                 >
-                  <LogOut className="h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <div className="flex items-center gap-3 px-3 py-3">
+                    <Avatar className="h-10 w-10 ring-2 ring-primary/10 shadow-sm">
+                      <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-sm font-bold">
+                        {(user?.name ?? user?.email ?? "U")
+                          .split(" ")
+                          .map((n: string) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-left leading-tight">
+                      <span className="font-semibold text-sm">
+                        {user?.name ?? user?.email ?? "Unknown"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {user?.email ?? ""}
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="w-fit mt-1 text-[10px] px-1.5 py-0 font-medium border-primary/20 text-primary/80 bg-primary/5"
+                      >
+                        {user?.role ?? "end_user"}
+                      </Badge>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator className="bg-border/50" />
+                  <DropdownMenuItem className="gap-2 px-3 py-2 cursor-pointer rounded-lg mx-1 my-0.5">
+                    <Settings className="h-4 w-4 text-muted-foreground" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-border/50" />
+                  <DropdownMenuItem
+                    className="gap-2 px-3 py-2 cursor-pointer text-destructive focus:text-destructive rounded-lg mx-1 my-0.5"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

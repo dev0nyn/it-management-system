@@ -21,33 +21,41 @@ interface SessionState {
   loading: boolean;
 }
 
-const SessionContext = createContext<SessionState>({
-  user: null,
-  loading: true,
-});
+const SessionContext = createContext<SessionState | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState<SessionState>({
+    user: null,
+    loading: true,
+  });
 
   useEffect(() => {
     fetch("/api/auth/me")
-      .then((res) => {
-        if (!res.ok) return null;
-        return res.json() as Promise<SessionUser>;
+      .then(async (res) => {
+        if (res.ok) {
+          const user: SessionUser = await res.json();
+          setState({ user, loading: false });
+        } else {
+          setState({ user: null, loading: false });
+        }
       })
-      .then((data) => setUser(data))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        setState({ user: null, loading: false });
+      });
   }, []);
 
   return (
-    <SessionContext.Provider value={{ user, loading }}>
-      {children}
-    </SessionContext.Provider>
+    <SessionContext.Provider value={state}>{children}</SessionContext.Provider>
   );
 }
 
-export function useSession(): SessionState {
-  return useContext(SessionContext);
+export function useSessionContext(): SessionState {
+  const ctx = useContext(SessionContext);
+  if (ctx === undefined) {
+    throw new Error("useSessionContext must be used within a SessionProvider");
+  }
+  return ctx;
 }
+
+/** Alias for useSessionContext — use either name */
+export const useSession = useSessionContext;
