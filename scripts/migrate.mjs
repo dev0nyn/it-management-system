@@ -50,11 +50,6 @@ try {
       continue;
     }
 
-    // Find the matching .sql file
-    const files = journal.entries
-      .filter((e) => e.tag === tag)
-      .map((e) => `${e.tag.replace(/^\d+_/, (m) => m)}.sql`);
-
     // The filename pattern is <tag>.sql e.g. 0000_eminent_bedlam.sql
     const sqlFile = join(MIGRATIONS_DIR, `${tag}.sql`);
     const migrationSql = readFileSync(sqlFile, "utf8");
