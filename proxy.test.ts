@@ -1,4 +1,4 @@
-import { middleware } from "./middleware";
+import { middleware } from "./proxy";
 import { NextRequest } from "next/server";
 
 describe("middleware auth guard", () => {
