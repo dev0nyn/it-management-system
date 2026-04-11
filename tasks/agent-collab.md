@@ -50,7 +50,7 @@ Single source of truth for which agent owns which ticket. **Read this file befor
 ## In Progress
 | Ticket | Agent | Branch | Claimed At | Notes |
 |--------|-------|--------|------------|-------|
-| _(none yet)_ | | | | |
+| CD-1 | claude-sonnet-4-6 | feature/cd-healthcheck-endpoint | 2026-04-11 | /api/healthz endpoint |
 
 ## Done
 | Ticket | Agent | PR | Merged At |
