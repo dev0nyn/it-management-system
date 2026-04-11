@@ -24,7 +24,7 @@ Single source of truth for which agent owns which ticket. **Read this file befor
 | T-0.2 | 0 | DB schema & migrations | shared | BLOCKING |
 | T-0.3 | 0 | Auth middleware & RBAC | shared | BLOCKING |
 | T-0.4 | 0 | Notification service interface | shared | BLOCKING |
-| T-1.1 | 1 | Login endpoint + UI | auth | depends on 0.* |
+| ~~T-1.1~~ | 1 | Login endpoint + UI | auth | Ready for QA — PRs #120–#125 |
 | T-1.2 | 1 | Dashboard shell & nav | auth | |
 | T-1.3 | 1 | Logout endpoint | auth | |
 | T-2.1 | 2 | CRUD users API | users | |
@@ -50,12 +50,13 @@ Single source of truth for which agent owns which ticket. **Read this file befor
 ## In Progress
 | Ticket | Agent | Branch | Claimed At | Notes |
 |--------|-------|--------|------------|-------|
-| T-1.1 | software-developer | feature/story-1.1-middleware-jwt (stacked) | 2026-04-11T00:00:00Z | 6-branch stack: middleware JWT, login validation, seed, me tests, session context, sidebar wiring |
+| _(none yet)_ | | | | |
 
 ## Done
 | Ticket | Agent | PR | Merged At |
 |--------|-------|----|-----------|
 | T-1.2 | Nino | [#98](https://github.com/dev0nyn/it-management-system/pull/98) | 2026-04-10 |
+| T-1.1 | software-developer | [#120](https://github.com/dev0nyn/it-management-system/pull/120) [#121](https://github.com/dev0nyn/it-management-system/pull/121) [#122](https://github.com/dev0nyn/it-management-system/pull/122) [#123](https://github.com/dev0nyn/it-management-system/pull/123) [#124](https://github.com/dev0nyn/it-management-system/pull/124) [#125](https://github.com/dev0nyn/it-management-system/pull/125) | Ready for QA |
 
 ## Shared Resource Claims
 Active exclusive claims on `shared/` paths. Release as soon as your PR is merged.
