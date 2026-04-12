@@ -61,7 +61,16 @@ try {
 
     console.log(`  apply ${tag}...`);
     for (const statement of statements) {
-      await sql.unsafe(statement);
+      // Wrap CREATE TYPE in a DO block so re-runs don't fail with
+      // "type already exists" when the type was created outside Drizzle.
+      if (/^\s*CREATE TYPE\s/i.test(statement)) {
+        const escaped = statement.replace(/\$\$/g, "\\$\\$");
+        await sql.unsafe(
+          `DO $migration$ BEGIN ${escaped}; EXCEPTION WHEN duplicate_object THEN NULL; END $migration$;`
+        );
+      } else {
+        await sql.unsafe(statement);
+      }
     }
 
     await sql`
