@@ -1,3 +1,12 @@
+/**
+ * Base URL for all API calls.
+ * - Production (Vercel): NEXT_PUBLIC_API_URL points to the Railway API server.
+ * - Local dev / Railway itself: empty string → relative paths work as-is.
+ */
+export function getApiBase(): string {
+  return process.env.NEXT_PUBLIC_API_URL ?? "";
+}
+
 const TOKEN_KEY = "session_token";
 const USER_KEY = "session_user";
 
