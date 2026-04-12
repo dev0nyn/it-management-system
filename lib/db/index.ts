@@ -4,7 +4,7 @@ import postgres from "postgres";
 const isProduction = process.env.NODE_ENV === "production";
 
 const client = postgres(process.env.DATABASE_URL!, {
-  ssl: isProduction ? "require" : false,
+  ssl: isProduction ? { rejectUnauthorized: false } : false,
 });
 
 export const db = drizzle(client);
