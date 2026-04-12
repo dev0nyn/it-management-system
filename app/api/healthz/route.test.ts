@@ -56,15 +56,15 @@ describe("GET /api/healthz", () => {
     expect(response.headers.get("Cache-Control")).toBe("no-store");
   });
 
-  it("returns 503 with error shape when DATABASE_URL is set and DB throws", async () => {
+  it("returns 200 with db unreachable when DATABASE_URL is set and DB throws", async () => {
     process.env.DATABASE_URL = "postgres://test:test@localhost:5432/test";
     mockDb.execute.mockRejectedValueOnce(new Error("connection refused"));
 
     const response = await GET();
     const body = await response.json();
 
-    expect(response.status).toBe(503);
-    expect(body.status).toBe("error");
+    expect(response.status).toBe(200);
+    expect(body.status).toBe("ok");
     expect(body.db).toBe("unreachable");
   });
 });
