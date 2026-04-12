@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Shield, Eye, EyeOff, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { setSession } from "@/lib/api-client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,6 +33,8 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
+      const data = await res.json();
+      setSession(data.token, data.user);
       router.push("/dashboard");
     } catch {
       setError("Network error — please try again");

@@ -39,6 +39,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { getSessionUser, clearSession } from "@/lib/api-client";
 
 const mainNav = [
   {
@@ -90,13 +91,6 @@ const systemNav = [
   },
 ];
 
-// TODO (Story 1.1): Replace with real user from JWT claims — see PR #95/#96
-const mockUser = {
-  name: "Admin User",
-  email: "admin@example.com",
-  role: "admin" as const,
-};
-
 type UserRole = "admin" | "it_staff" | "end_user";
 interface SidebarUser {
   name: string;
@@ -104,9 +98,13 @@ interface SidebarUser {
   role: UserRole;
 }
 
-export function AppSidebar({ user = mockUser }: { user?: SidebarUser } = {}) {
+const fallbackUser: SidebarUser = { name: "Unknown", email: "", role: "end_user" };
+
+export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const sessionUser = getSessionUser();
+  const user: SidebarUser = sessionUser ?? fallbackUser;
 
   const isActive = (href: string) => pathname === href;
 
@@ -118,7 +116,7 @@ export function AppSidebar({ user = mockUser }: { user?: SidebarUser } = {}) {
   );
 
   const handleLogout = () => {
-    document.cookie = "mock_token=; path=/; max-age=0; SameSite=Lax";
+    clearSession();
     router.push("/login");
   };
 

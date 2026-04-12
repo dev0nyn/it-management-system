@@ -4,7 +4,8 @@ import { verifyToken, type TokenPayload } from "./jwt";
 type Role = "admin" | "it_staff" | "end_user";
 
 export function getSession(req: NextRequest): TokenPayload | null {
-  const token = req.cookies.get("session")?.value;
+  const auth = req.headers.get("authorization");
+  const token = auth?.startsWith("Bearer ") ? auth.slice(7) : null;
   if (!token) return null;
   try {
     return verifyToken(token);

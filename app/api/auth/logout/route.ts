@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
+// Stateless JWT — nothing to invalidate server-side.
+// The client clears the token from localStorage on logout.
 export async function POST() {
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set("session", "", { maxAge: 0, path: "/" });
-  return res;
+  return NextResponse.json({ ok: true });
 }
