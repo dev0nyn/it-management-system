@@ -23,15 +23,10 @@ export async function GET() {
     dbStatus = "unreachable";
   }
 
-  if (dbStatus === "unreachable") {
-    return NextResponse.json(
-      { status: "error", db: "unreachable" },
-      { status: 503, headers: { "Cache-Control": "no-store" } },
-    );
-  }
-
+  // Always return 200 so Railway doesn't restart the container when the DB is temporarily
+  // unreachable — a container restart cannot fix an external DB issue and creates a restart loop.
   return NextResponse.json(
-    { status: "ok", db: "ok", uptime: Math.floor(process.uptime()), version: "1.0.0" },
+    { status: "ok", db: dbStatus, uptime: Math.floor(process.uptime()), version: "1.0.0" },
     { status: 200, headers: { "Cache-Control": "no-store" } },
   );
 }
