@@ -64,9 +64,10 @@ try {
       // Wrap CREATE TYPE in a DO block so re-runs don't fail with
       // "type already exists" when the type was created outside Drizzle.
       if (/^\s*CREATE TYPE\s/i.test(statement)) {
-        const escaped = statement.replace(/\$\$/g, "\\$\\$");
+        // Strip trailing semicolon — the DO block adds its own.
+        const body = statement.replace(/;\s*$/, "");
         await sql.unsafe(
-          `DO $migration$ BEGIN ${escaped}; EXCEPTION WHEN duplicate_object THEN NULL; END $migration$;`
+          `DO $migration$ BEGIN ${body}; EXCEPTION WHEN duplicate_object THEN NULL; END $migration$;`
         );
       } else {
         await sql.unsafe(statement);
