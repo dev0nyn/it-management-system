@@ -1,0 +1,11 @@
+# Nixpacks build configuration for Railway
+# Ensures native build tools are available for argon2 (node-gyp) compilation.
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "python3", "gcc", "gnumake"]
+
+[phases.build]
+cmds = ["npm install -g pnpm", "pnpm install --frozen-lockfile", "pnpm build"]
+
+[start]
+cmd = "pnpm start"
