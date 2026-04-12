@@ -61,13 +61,12 @@ try {
 
     console.log(`  apply ${tag}...`);
     for (const statement of statements) {
-      // Wrap CREATE TYPE in a DO block so re-runs don't fail with
-      // "type already exists" when the type was created outside Drizzle.
-      if (/^\s*CREATE TYPE\s/i.test(statement)) {
-        // Strip trailing semicolon — the DO block adds its own.
+      // Wrap all CREATE statements in a DO block so re-runs are idempotent.
+      // Catches duplicate_object (types/indexes) and duplicate_table.
+      if (/^\s*CREATE\s/i.test(statement)) {
         const body = statement.replace(/;\s*$/, "");
         await sql.unsafe(
-          `DO $migration$ BEGIN ${body}; EXCEPTION WHEN duplicate_object THEN NULL; END $migration$;`
+          `DO $migration$ BEGIN ${body}; EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL; END $migration$;`
         );
       } else {
         await sql.unsafe(statement);
