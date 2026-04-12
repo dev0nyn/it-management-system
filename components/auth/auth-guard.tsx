@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { getToken } from "@/lib/api-client";
 
+function subscribeNoop() {
+  return () => {};
+}
+
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [authorized] = useState(() => !!getToken());
+  const token = useSyncExternalStore(
+    subscribeNoop,
+    () => getToken(),
+    () => null,
+  );
 
   useEffect(() => {
     if (!getToken()) {
@@ -14,6 +22,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [router]);
 
-  if (!authorized) return null;
+  if (!token) return null;
   return <>{children}</>;
 }

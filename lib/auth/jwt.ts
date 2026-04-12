@@ -6,7 +6,7 @@ export interface TokenPayload {
   role: "admin" | "it_staff" | "end_user";
 }
 
-const secret = process.env.JWT_SECRET!;
+const secret = process.env.JWT_ACCESS_SECRET!;
 
 export function signToken(payload: TokenPayload): string {
   return jwt.sign(payload, secret, { expiresIn: "7d" });
