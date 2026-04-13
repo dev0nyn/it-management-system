@@ -51,12 +51,13 @@ Single source of truth for which agent owns which ticket. **Read this file befor
 | Ticket | Agent | Branch | Claimed At | Notes |
 |--------|-------|--------|------------|-------|
 | CD-1 | claude-sonnet-4-6 | feature/cd-healthcheck-endpoint | 2026-04-11 | /api/healthz endpoint |
-| T-2.2 | Nino | feat/story-2.2-user-management-ui | 2026-04-11 | User management UI → API integration |
+| T-4.1 | Nino | feat/story-4.1-submit-ticket | 2026-04-14 | Submit ticket API + UI |
 
 ## Done
 | Ticket | Agent | PR | Merged At |
 |--------|-------|----|-----------|
 | T-1.2 | Nino | [#98](https://github.com/dev0nyn/it-management-system/pull/98) | 2026-04-10 |
+| T-2.2 | Nino | [#129](https://github.com/dev0nyn/it-management-system/pull/129) | 2026-04-11 |
 
 ## Shared Resource Claims
 Active exclusive claims on `shared/` paths. Release as soon as your PR is merged.
@@ -71,6 +72,7 @@ Sequential — grab the next number, don't skip.
 | # | Filename | Agent | Ticket | Status |
 |---|----------|-------|--------|--------|
 | 0001 | initial_schema | _(Epic 0 owner)_ | T-0.2 | reserved |
+| 0002 | Nino | T-4.1 | tickets_table | reserved |
 
 ## Cross-agent Requests
 Need a change in someone else's module? Drop it here instead of editing their code.
