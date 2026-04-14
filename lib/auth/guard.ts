@@ -37,3 +37,27 @@ export function requireRole(
   }
   return { session };
 }
+
+export function requireAnyRole(
+  req: NextRequest,
+  roles: Role[]
+): { session: TokenPayload } | { error: NextResponse } {
+  const session = getSession(req);
+  if (!session) {
+    return {
+      error: NextResponse.json(
+        { error: { code: "UNAUTHORIZED", message: "Authentication required" } },
+        { status: 401 }
+      ),
+    };
+  }
+  if (!roles.includes(session.role)) {
+    return {
+      error: NextResponse.json(
+        { error: { code: "FORBIDDEN", message: "Insufficient permissions" } },
+        { status: 403 }
+      ),
+    };
+  }
+  return { session };
+}
