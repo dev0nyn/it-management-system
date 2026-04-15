@@ -97,6 +97,16 @@ vi.mock("@/components/ui/skeleton", () => ({
   Skeleton: () => <div data-testid="skeleton" />,
 }));
 
+// Proxy authFetch → global fetch so vi.stubGlobal("fetch", ...) still controls calls.
+// Users page switched from raw fetch() to authFetch() for auth headers.
+// Only forward init when it's defined so call signatures match existing assertions.
+vi.mock("@/lib/api-client", () => ({
+  authFetch: (url: string, init?: RequestInit) => (init !== undefined ? fetch(url, init) : fetch(url)),
+  getToken: () => null,
+  getSessionUser: () => null,
+  clearSession: vi.fn(),
+}));
+
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------

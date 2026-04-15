@@ -13,6 +13,26 @@ const createSchema = z.object({
   assetId: z.string().uuid().optional(),
 });
 
+export async function GET(req: NextRequest) {
+  const session = getSession(req);
+  if (!session) {
+    return NextResponse.json(
+      { error: { code: "UNAUTHORIZED", message: "Authentication required" } },
+      { status: 401 }
+    );
+  }
+
+  const tickets = await service.getTickets();
+
+  // End users only see their own tickets
+  const filtered =
+    session.role === "end_user"
+      ? tickets.filter((t) => t.createdBy === session.id)
+      : tickets;
+
+  return NextResponse.json({ data: filtered });
+}
+
 export async function POST(req: NextRequest) {
   const session = getSession(req);
   if (!session) {

@@ -57,6 +57,9 @@ const mockGetSessionUser = vi.fn();
 vi.mock("@/lib/api-client", () => ({
   getSessionUser: () => mockGetSessionUser(),
   clearSession: vi.fn(),
+  authFetch: vi.fn().mockResolvedValue(
+    new Response(JSON.stringify({ data: [] }), { status: 200 })
+  ),
 }));
 
 const adminUser = { id: "1", name: "Admin User", email: "admin@example.com", role: "admin" as const };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { authFetch } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -63,12 +64,12 @@ export function UserFormSheet({
     try {
       const res =
         mode === "create"
-          ? await fetch("/api/v1/users", {
+          ? await authFetch("/api/v1/users", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ name, email, password, role }),
             })
-          : await fetch(`/api/v1/users/${user!.id}`, {
+          : await authFetch(`/api/v1/users/${user!.id}`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ name, email, role }),

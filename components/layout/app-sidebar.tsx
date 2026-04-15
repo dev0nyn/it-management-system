@@ -10,9 +10,9 @@ import {
   Settings,
   LogOut,
   ChevronUp,
-
   Sparkles,
 } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -39,7 +39,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { getSessionUser, clearSession } from "@/lib/api-client";
+import { getSessionUser, clearSession, authFetch } from "@/lib/api-client";
 
 const mainNav = [
   {
@@ -52,7 +52,6 @@ const mainNav = [
     title: "Tickets",
     href: "/tickets",
     icon: Ticket,
-    badge: "12",
     description: "Support requests",
   },
 ];
@@ -105,6 +104,24 @@ export function AppSidebar() {
   const router = useRouter();
   const sessionUser = getSessionUser();
   const user: SidebarUser = sessionUser ?? fallbackUser;
+  const [openTicketCount, setOpenTicketCount] = useState<number | null>(null);
+
+  const fetchOpenCount = useCallback(() => {
+    authFetch("/api/v1/tickets")
+      .then((r) => r.json())
+      .then((json) => {
+        const tickets: { status: string }[] = json?.data ?? [];
+        const count = tickets.filter((t) => t.status === "open").length;
+        setOpenTicketCount(count > 0 ? count : null);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchOpenCount();
+    window.addEventListener("tickets:changed", fetchOpenCount);
+    return () => window.removeEventListener("tickets:changed", fetchOpenCount);
+  }, [fetchOpenCount]);
 
   const isActive = (href: string) => pathname === href;
 
@@ -169,10 +186,10 @@ export function AppSidebar() {
                                 : "size-[18px] transition-colors duration-200"
                             }
                           />
-                          <span>{item.title}</span>
-                          {"badge" in item && item.badge && (
-                            <Badge className="ml-auto h-5 min-w-5 rounded-full px-1.5 text-[10px] font-bold bg-primary/15 text-primary border-0 shadow-none">
-                              {item.badge}
+                          <span className="flex-1 min-w-0 truncate">{item.title}</span>
+                          {item.href === "/tickets" && openTicketCount !== null && (
+                            <Badge className="shrink-0 ml-auto h-5 min-w-5 rounded-full px-1.5 text-[10px] font-bold bg-primary/15 text-primary border-0 shadow-none group-data-[collapsible=icon]:hidden">
+                              {openTicketCount}
                             </Badge>
                           )}
                         </Link>
