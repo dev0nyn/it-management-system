@@ -4,6 +4,17 @@ import userEvent from "@testing-library/user-event";
 import { UserFormSheet, type ApiUser } from "../user-form-sheet";
 
 // ---------------------------------------------------------------------------
+// Mock @/lib/api-client so authFetch passes through to global.fetch without
+// touching localStorage (which is unavailable / throws in this jsdom config).
+// ---------------------------------------------------------------------------
+vi.mock("@/lib/api-client", () => ({
+  getToken: vi.fn().mockReturnValue(null),
+  authFetch: vi.fn().mockImplementation(
+    (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init)
+  ),
+}));
+
+// ---------------------------------------------------------------------------
 // Mock @/components/ui/sheet
 // @base-ui/react/dialog relies on pointer capture and animation APIs absent
 // in jsdom. Replace every Sheet primitive with inert HTML so the form content
