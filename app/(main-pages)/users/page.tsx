@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { authFetch } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -83,7 +84,7 @@ export default function UsersPage() {
     const params = new URLSearchParams({ page: String(page) });
     if (debouncedSearch) params.set("search", debouncedSearch);
 
-    fetch(`/api/v1/users?${params}`)
+    authFetch(`/api/v1/users?${params}`)
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled) {
@@ -121,7 +122,7 @@ export default function UsersPage() {
     setIsDeleting(true);
     setDeleteError(null);
     try {
-      const res = await fetch(`/api/v1/users/${deleteTarget.id}`, {
+      const res = await authFetch(`/api/v1/users/${deleteTarget.id}`, {
         method: "DELETE",
       });
       if (!res.ok) {
