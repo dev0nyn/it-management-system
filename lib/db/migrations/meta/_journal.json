@@ -15,6 +15,13 @@
       "when": 1744646400000,
       "tag": "0001_tickets_table",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1744732800000,
+      "tag": "0002_assets_table",
+      "breakpoints": true
     }
   ]
 }
