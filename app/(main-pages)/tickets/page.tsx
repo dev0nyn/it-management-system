@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useId, useMemo, useRef, useEffect } from "react";
+import { TicketSubmitSheet } from "@/components/tickets/ticket-submit-sheet";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -242,6 +243,7 @@ export default function TicketsPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
   const [overColumnId, setOverColumnId] = useState<string | null>(null);
+  const [submitSheetOpen, setSubmitSheetOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -481,7 +483,10 @@ export default function TicketsPage() {
             )}
           </div>
 
-          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm hover:shadow transition-all rounded-lg h-9 px-4 text-sm w-full sm:w-auto">
+          <Button
+            onClick={() => setSubmitSheetOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm hover:shadow transition-all rounded-lg h-9 px-4 text-sm w-full sm:w-auto"
+          >
             <Plus className="h-4 w-4 mr-1.5" />
             New Ticket
           </Button>
@@ -517,6 +522,11 @@ export default function TicketsPage() {
           {activeTicket ? <TicketCard ticket={activeTicket} isDragging /> : null}
         </DragOverlay>
       </DndContext>
+
+      <TicketSubmitSheet
+        open={submitSheetOpen}
+        onOpenChange={setSubmitSheetOpen}
+      />
     </div>
   );
 }
