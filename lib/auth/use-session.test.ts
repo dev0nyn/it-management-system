@@ -4,7 +4,9 @@ import { useSession } from "./use-session";
 import { SessionProvider } from "./session-context";
 import React from "react";
 
-const wrapper = ({ children }: { children: React.ReactNode }) =>
+// @testing-library/react v16 wrapper type is incompatible with React 19 FC return type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const wrapper: any = ({ children }: { children: React.ReactNode }) =>
   React.createElement(SessionProvider, null, children);
 
 const mockUser = { id: "1", email: "admin@example.com", role: "admin" as const };
