@@ -16,12 +16,21 @@ vi.mock("@/lib/auth/jwt", () => ({
   signToken: vi.fn(() => "mocked.jwt.token"),
 }));
 
+// Mock Redis rate limiter — unit tests don't require a real Redis instance
+vi.mock("@/lib/rate-limit", () => ({
+  isRateLimited: vi.fn().mockResolvedValue(false),
+  recordFailedAttempt: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { POST } from "./route";
 import { findByEmail } from "@/lib/users/repository";
 import argon2 from "argon2";
+import { isRateLimited, recordFailedAttempt } from "@/lib/rate-limit";
 
 const mockFindByEmail = vi.mocked(findByEmail);
 const mockVerify = vi.mocked(argon2.verify);
+const mockIsRateLimited = vi.mocked(isRateLimited);
+const mockRecordFailedAttempt = vi.mocked(recordFailedAttempt);
 
 const validUser = {
   id: "user-1",
@@ -47,6 +56,8 @@ function makeRequest(body: unknown, ip = "127.0.0.1") {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockIsRateLimited.mockResolvedValue(false);
+  mockRecordFailedAttempt.mockResolvedValue(undefined);
 });
 
 describe("POST /api/auth/login", () => {
@@ -54,60 +65,78 @@ describe("POST /api/auth/login", () => {
     mockFindByEmail.mockResolvedValue(validUser);
     mockVerify.mockResolvedValue(true);
 
-    const res = await POST(makeRequest({ email: "admin@example.com", password: "admin1234" }, "10.0.0.1"));
+    const res = await POST(makeRequest({ email: "admin@example.com", password: "admin1234" }));
     expect(res.status).toBe(200);
     const setCookie = res.headers.get("set-cookie");
     expect(setCookie).toContain("session=");
+    expect(mockRecordFailedAttempt).not.toHaveBeenCalled();
   });
 
-  it("returns 401 for wrong password", async () => {
+  it("returns 401 for wrong password and records failed attempt", async () => {
     mockFindByEmail.mockResolvedValue(validUser);
     mockVerify.mockResolvedValue(false);
 
-    const res = await POST(makeRequest({ email: "admin@example.com", password: "wrong" }, "10.0.0.2"));
+    const res = await POST(makeRequest({ email: "admin@example.com", password: "wrong" }));
     expect(res.status).toBe(401);
     const body = await res.json();
     expect(body.error.code).toBe("INVALID_CREDENTIALS");
+    expect(mockRecordFailedAttempt).toHaveBeenCalledWith(
+      expect.any(String),
+      "admin@example.com"
+    );
   });
 
-  it("returns 401 for unknown email", async () => {
+  it("returns 401 for unknown email and records failed attempt", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockFindByEmail.mockResolvedValue(null as any);
 
-    const res = await POST(makeRequest({ email: "nobody@example.com", password: "pass" }, "10.0.0.3"));
+    const res = await POST(makeRequest({ email: "nobody@example.com", password: "pass" }));
     expect(res.status).toBe(401);
     const body = await res.json();
     expect(body.error.code).toBe("INVALID_CREDENTIALS");
+    expect(mockRecordFailedAttempt).toHaveBeenCalledWith(
+      expect.any(String),
+      "nobody@example.com"
+    );
   });
 
   it("returns 422 for malformed input (invalid email)", async () => {
-    const res = await POST(makeRequest({ email: "not-an-email", password: "pass" }, "10.0.0.4"));
+    const res = await POST(makeRequest({ email: "not-an-email", password: "pass" }));
     expect(res.status).toBe(422);
     const body = await res.json();
     expect(body.error.code).toBe("VALIDATION_ERROR");
   });
 
   it("returns 422 when password is missing", async () => {
-    const res = await POST(makeRequest({ email: "admin@example.com" }, "10.0.0.5"));
+    const res = await POST(makeRequest({ email: "admin@example.com" }));
     expect(res.status).toBe(422);
     const body = await res.json();
     expect(body.error.code).toBe("VALIDATION_ERROR");
   });
 
-  it("returns 429 after 5 attempts from same IP", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockFindByEmail.mockResolvedValue(null as any);
-    const ip = "10.1.1.1";
+  it("returns 429 with Retry-After header when rate limited", async () => {
+    mockIsRateLimited.mockResolvedValueOnce(true);
 
-    // First 5 attempts consume the allowance (all return 401)
-    for (let i = 0; i < 5; i++) {
-      await POST(makeRequest({ email: "x@example.com", password: "p" }, ip));
-    }
-
-    // 6th attempt should be rate-limited
-    const res = await POST(makeRequest({ email: "x@example.com", password: "p" }, ip));
+    const res = await POST(makeRequest({ email: "x@example.com", password: "p" }));
     expect(res.status).toBe(429);
     const body = await res.json();
     expect(body.error.code).toBe("RATE_LIMITED");
+    expect(res.headers.get("Retry-After")).toBe("60");
+  });
+
+  it("uses rightmost x-forwarded-for value as client IP", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockFindByEmail.mockResolvedValue(null as any);
+    const req = new NextRequest("http://localhost/api/auth/login", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        // leftmost is attacker-controlled, rightmost is the trusted proxy value
+        "x-forwarded-for": "1.2.3.4, 10.0.0.1",
+      },
+      body: JSON.stringify({ email: "x@example.com", password: "p" }),
+    });
+    await POST(req);
+    expect(mockIsRateLimited).toHaveBeenCalledWith("10.0.0.1");
   });
 });

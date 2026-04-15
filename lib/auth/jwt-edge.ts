@@ -2,8 +2,8 @@ import { jwtVerify } from "jose";
 import type { TokenPayload } from "./jwt";
 
 function getSecret(): Uint8Array {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error("JWT_SECRET is not set");
+  const secret = process.env.JWT_ACCESS_SECRET;
+  if (!secret) throw new Error("JWT_ACCESS_SECRET is not set");
   return new TextEncoder().encode(secret);
 }
 

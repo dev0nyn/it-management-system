@@ -6,10 +6,11 @@ export interface TokenPayload {
   role: "admin" | "it_staff" | "end_user";
 }
 
-const secret = process.env.JWT_SECRET!;
+const secret = process.env.JWT_ACCESS_SECRET!;
 
 export function signToken(payload: TokenPayload): string {
-  return jwt.sign(payload, secret, { expiresIn: "7d" });
+  const ttl = (process.env.JWT_ACCESS_TTL ?? "15m") as `${number}${"s" | "m" | "h" | "d"}`;
+  return jwt.sign(payload, secret, { expiresIn: ttl });
 }
 
 export function verifyToken(token: string): TokenPayload {
