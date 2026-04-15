@@ -51,6 +51,7 @@ Single source of truth for which agent owns which ticket. **Read this file befor
 | Ticket | Agent | Branch | Claimed At | Notes |
 |--------|-------|--------|------------|-------|
 | CD-1 | claude-sonnet-4-6 | feature/cd-healthcheck-endpoint | 2026-04-11 | /api/healthz endpoint |
+| T-2.2 | Nino | feat/story-2.2-user-management-ui | 2026-04-11 | User management UI → API integration |
 
 ## Done
 | Ticket | Agent | PR | Merged At |
