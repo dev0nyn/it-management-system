@@ -12,6 +12,8 @@ export interface SessionUser {
   id: string;
   email: string;
   role: "admin" | "it_staff" | "end_user";
+  /** Display name — not currently returned by /api/auth/me (JWT payload omits it). */
+  name?: string;
 }
 
 interface SessionState {

@@ -6,6 +6,9 @@ export interface TokenPayload {
   role: "admin" | "it_staff" | "end_user";
 }
 
+/** Shared algorithm constant — referenced by both jwt.ts (Node) and jwt-edge.ts (Edge). */
+export const JWT_ALGORITHM = "HS256" as const;
+
 const secret = process.env.JWT_ACCESS_SECRET!;
 
 export function signToken(payload: TokenPayload): string {
