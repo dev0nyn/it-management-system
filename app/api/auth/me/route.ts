@@ -1,27 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "@/lib/auth/jwt";
+import { getSession } from "@/lib/auth/guard";
 
+// NOTE: This route runs in the Node.js runtime (not Edge) because getSession
+// uses jsonwebtoken, which is not Edge-compatible. Use verifyTokenEdge (jose)
+// if this route is ever moved to the Edge runtime.
 export async function GET(req: NextRequest) {
-  const token = req.cookies.get("session")?.value;
+  const session = getSession(req);
 
-  if (!token) {
+  if (!session) {
     return NextResponse.json(
-      { error: { code: "UNAUTHORIZED" } },
+      { error: { code: "UNAUTHORIZED", message: "Authentication required" } },
       { status: 401 }
     );
   }
 
-  try {
-    const payload = verifyToken(token);
-    return NextResponse.json({
-      id: payload.id,
-      email: payload.email,
-      role: payload.role,
-    });
-  } catch {
-    return NextResponse.json(
-      { error: { code: "UNAUTHORIZED" } },
-      { status: 401 }
-    );
-  }
+  return NextResponse.json({
+    id: session.id,
+    email: session.email,
+    role: session.role,
+  });
 }
