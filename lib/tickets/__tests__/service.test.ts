@@ -113,3 +113,72 @@ describe("createTicket", () => {
     expect(notifyMock).not.toHaveBeenCalled();
   });
 });
+
+describe("updateTicket — reassignment notification", () => {
+  const mockTicketWithJoins = {
+    ...mockTicket,
+    reporterName: "Alice",
+    assigneeName: null,
+  };
+
+  it("notifies new assignee when assigneeId changes", async () => {
+    const assignee = { id: "staff2", email: "staff2@example.com", name: "New Staff" };
+    vi.mocked(repo.findById).mockResolvedValue({ ...mockTicketWithJoins, assigneeId: null });
+    vi.mocked(repo.update).mockResolvedValue({ ...mockTicketWithJoins, assigneeId: "staff2" });
+    vi.mocked(repo.findUserById).mockResolvedValue(assignee);
+
+    const notifyMock = vi.fn().mockResolvedValue([]);
+    vi.mocked(createNotificationService).mockReturnValue({ notify: notifyMock });
+
+    await service.updateTicket("ticket-1", { assigneeId: "staff2" });
+
+    expect(notifyMock).toHaveBeenCalledOnce();
+    expect(notifyMock).toHaveBeenCalledWith(
+      [{ userId: "staff2", email: "staff2@example.com", name: "New Staff" }],
+      expect.objectContaining({ channel: "in-app" })
+    );
+  });
+
+  it("does not notify when assigneeId is not in the update payload", async () => {
+    vi.mocked(repo.findById).mockResolvedValue({ ...mockTicketWithJoins, assigneeId: "staff2" });
+    vi.mocked(repo.update).mockResolvedValue({ ...mockTicketWithJoins, assigneeId: "staff2" });
+
+    const notifyMock = vi.fn();
+    vi.mocked(createNotificationService).mockReturnValue({ notify: notifyMock });
+
+    await service.updateTicket("ticket-1", { title: "Updated title" });
+
+    expect(notifyMock).not.toHaveBeenCalled();
+  });
+
+  it("does not notify when assigneeId is set to null (unassign)", async () => {
+    vi.mocked(repo.findById).mockResolvedValue({ ...mockTicketWithJoins, assigneeId: "staff2" });
+    vi.mocked(repo.update).mockResolvedValue({ ...mockTicketWithJoins, assigneeId: null });
+
+    const notifyMock = vi.fn();
+    vi.mocked(createNotificationService).mockReturnValue({ notify: notifyMock });
+
+    await service.updateTicket("ticket-1", { assigneeId: null });
+
+    expect(notifyMock).not.toHaveBeenCalled();
+  });
+
+  it("does not throw if reassignment notification fails", async () => {
+    vi.mocked(repo.findById).mockResolvedValue({ ...mockTicketWithJoins, assigneeId: null });
+    vi.mocked(repo.update).mockResolvedValue({ ...mockTicketWithJoins, assigneeId: "staff2" });
+    vi.mocked(repo.findUserById).mockResolvedValue({ id: "staff2", email: "s@x.com", name: "S" });
+
+    const notifyMock = vi.fn().mockRejectedValue(new Error("Network error"));
+    vi.mocked(createNotificationService).mockReturnValue({ notify: notifyMock });
+
+    await expect(service.updateTicket("ticket-1", { assigneeId: "staff2" })).resolves.not.toThrow();
+  });
+
+  it("throws TicketNotFoundError when ticket does not exist", async () => {
+    vi.mocked(repo.findById).mockResolvedValue(null as never);
+
+    await expect(service.updateTicket("missing", { title: "x" })).rejects.toThrow(
+      service.TicketNotFoundError
+    );
+  });
+});

@@ -70,3 +70,11 @@ export async function findItStaffUsers() {
     .from(users)
     .where(eq(users.role, "it_staff"));
 }
+
+export async function findUserById(id: string) {
+  const rows = await db
+    .select({ id: users.id, email: users.email, name: users.name })
+    .from(users)
+    .where(eq(users.id, id));
+  return rows[0] ?? null;
+}
