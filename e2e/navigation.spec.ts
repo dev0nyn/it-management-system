@@ -51,22 +51,20 @@ test.describe("Navigation — admin role", () => {
 });
 
 test.describe("Protected routes — unauthenticated", () => {
+  // Fresh page context has no session — no need to clear localStorage
   test("GET /dashboard → redirect to /login", async ({ page }) => {
-    await page.evaluate(() => localStorage.clear());
     await page.goto("/dashboard");
     await page.waitForURL(/\/login/, { timeout: 10_000 });
     await expect(page).toHaveURL(/\/login/);
   });
 
   test("GET /users → redirect to /login", async ({ page }) => {
-    await page.evaluate(() => localStorage.clear());
     await page.goto("/users");
     await page.waitForURL(/\/login/, { timeout: 10_000 });
     await expect(page).toHaveURL(/\/login/);
   });
 
   test("GET /assets → redirect to /login", async ({ page }) => {
-    await page.evaluate(() => localStorage.clear());
     await page.goto("/assets");
     await page.waitForURL(/\/login/, { timeout: 10_000 });
     await expect(page).toHaveURL(/\/login/);

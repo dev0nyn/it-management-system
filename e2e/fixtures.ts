@@ -1,7 +1,7 @@
 import { test as base, Page } from "@playwright/test";
 
 export const ADMIN = {
-  email: "admin@example.com",
+  email: "admin@itms.local",
   password: "Admin1234!",
 };
 

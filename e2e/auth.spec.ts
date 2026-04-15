@@ -3,7 +3,7 @@
  *
  * Tests login, validation, logout, and open redirect protection.
  * Requires the app running at PLAYWRIGHT_BASE_URL (default: http://localhost:3000)
- * with the seeded admin user: admin@example.com / Admin1234!
+ * with the seeded admin user: admin@itms.local / Admin1234!
  */
 
 import { test, expect } from "@playwright/test";
@@ -28,7 +28,8 @@ test.describe("Authentication", () => {
     await page.getByPlaceholder("Enter your password").fill("WrongPassword!");
     await page.getByRole("button", { name: "Sign in" }).click();
 
-    const alert = page.getByRole("alert");
+    // Use `p[role="alert"]` to avoid matching Next.js's route announcer div
+    const alert = page.locator('p[role="alert"]');
     await expect(alert).toBeVisible({ timeout: 5_000 });
     await expect(alert).not.toBeEmpty();
     // Stays on login page — no redirect
@@ -40,10 +41,11 @@ test.describe("Authentication", () => {
     await page.getByPlaceholder("Enter your password").fill("SomePassword1!");
     await page.getByRole("button", { name: "Sign in" }).click();
 
-    const alert = page.getByRole("alert");
+    // Use `p[role="alert"]` to avoid matching Next.js's route announcer div
+    const alert = page.locator('p[role="alert"]');
     await expect(alert).toBeVisible({ timeout: 5_000 });
-    // Message must NOT reveal whether the email exists
-    await expect(alert).not.toContainText("email");
+    // Must show same generic message as wrong-password — identical text prevents user enumeration
+    await expect(alert).toHaveText("Invalid email or password");
   });
 
   test("empty form → does not submit (native validation)", async ({ page }) => {

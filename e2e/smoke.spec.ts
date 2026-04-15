@@ -4,51 +4,48 @@
  *
  * Flow: Login → Dashboard → Submit ticket → Navigate to Assets → Logout
  *
- * This is the CI gate test. Must complete in < 60s.
+ * This is the CI gate test. Must complete in < 60s (headless, no slowMo).
  */
 
 import { test, expect } from "@playwright/test";
 import { ADMIN, loginAs, logout } from "./fixtures";
 
 test("smoke — full happy path", async ({ page }) => {
+  test.setTimeout(120_000);
+
   // 1. Login
   await loginAs(page, ADMIN.email, ADMIN.password);
   await expect(page).toHaveURL(/\/dashboard/);
 
-  // 2. Dashboard loads
-  await expect(page.getByRole("link", { name: /Dashboard/i }).first()).toBeVisible();
+  // 2. Dashboard sidebar is visible
+  await expect(page.getByRole("link", { name: "Dashboard" }).first()).toBeVisible();
 
   // 3. Navigate to Tickets
-  await page.getByRole("link", { name: /Tickets/i }).first().click();
+  await page.getByRole("link", { name: "Tickets" }).first().click();
   await expect(page).toHaveURL(/\/tickets/);
 
-  // Open the ticket submission sheet if present
-  const newTicketButton = page.getByRole("button", { name: /new ticket|submit|create/i });
-  if (await newTicketButton.isVisible({ timeout: 3_000 }).catch(() => false)) {
-    await newTicketButton.click();
+  // 4. Open the ticket submission dialog
+  const newTicketBtn = page.getByRole("button", { name: "New Ticket" });
+  await expect(newTicketBtn).toBeVisible({ timeout: 10_000 });
+  await newTicketBtn.click();
 
-    const titleInput = page.getByPlaceholder(/title/i).or(page.getByLabel(/title/i));
-    if (await titleInput.isVisible({ timeout: 3_000 }).catch(() => false)) {
-      await titleInput.fill("Smoke test ticket — automated");
-      const descInput = page.getByPlaceholder(/description/i).or(page.getByLabel(/description/i));
-      if (await descInput.isVisible({ timeout: 2_000 }).catch(() => false)) {
-        await descInput.fill("This ticket was created by the E2E smoke test.");
-      }
-      const submitBtn = page.getByRole("button", { name: /submit|save|create/i }).last();
-      await submitBtn.click();
-    }
-  }
+  // 5. Fill the ticket form
+  await page.getByPlaceholder("Brief description of the issue").fill("Smoke test ticket — automated");
+  await page.getByPlaceholder("Provide details about the issue — steps to reproduce, impact, etc.").fill("Created by the E2E smoke test.");
 
-  // 4. Navigate to Assets
-  await page.getByRole("link", { name: /Assets/i }).first().click();
+  // 6. Submit the ticket
+  await page.getByRole("button", { name: "Submit Ticket" }).click();
+
+  // 7. Sheet shows success state then close it
+  await expect(page.getByText("Ticket submitted!")).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("button", { name: "Close" }).first().click();
+
+  // 8. Navigate to Assets
+  await page.getByRole("link", { name: "Assets" }).first().click();
   await expect(page).toHaveURL(/\/assets/);
+  await expect(page.getByRole("heading", { name: "Assets" })).toBeVisible({ timeout: 10_000 });
 
-  // 5. Assets page loads
-  await expect(
-    page.getByRole("heading", { name: /assets/i }).or(page.getByText(/assets/i).first())
-  ).toBeVisible({ timeout: 10_000 });
-
-  // 6. Logout
+  // 9. Logout
   await logout(page);
   await expect(page).toHaveURL(/\/login/);
 });
