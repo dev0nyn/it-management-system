@@ -33,7 +33,9 @@ function LoginForm() {
         setLoading(false);
         return;
       }
-      const from = searchParams.get("from") ?? "/dashboard";
+      const rawFrom = searchParams.get("from") ?? "/dashboard";
+      // Guard against open redirect: only allow relative paths, block protocol-relative (//evil.com)
+      const from = rawFrom.startsWith("/") && !rawFrom.startsWith("//") ? rawFrom : "/dashboard";
       router.push(from);
     } catch {
       setError("Network error — please try again");
@@ -92,17 +94,7 @@ function LoginForm() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="remember"
-          className="h-4 w-4 rounded border-slate-300 dark:border-white/20 text-red-600 focus:ring-red-500"
-        />
-        <label htmlFor="remember" className="text-sm text-slate-600 dark:text-slate-400">
-          Remember me for 30 days
-        </label>
-      </div>
-
+      {/* TODO: Implement "Remember me" — adjust cookie maxAge based on user preference */}
       <Button
         type="submit"
         disabled={loading}

@@ -110,7 +110,12 @@ export function AppSidebar() {
   );
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (err) {
+      console.error("Logout request failed:", err);
+      // Still redirect — server cookie will expire via TTL even if the request failed
+    }
     router.push("/login");
   };
 
