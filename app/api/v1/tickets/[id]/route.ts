@@ -70,7 +70,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   try {
-    const ticket = await service.updateTicket(id, parsed.data);
+    const ticket = await service.updateTicket(id, parsed.data, auth.session.id);
     return NextResponse.json({ data: ticket });
   } catch (err) {
     if (err instanceof service.TicketNotFoundError) {

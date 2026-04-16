@@ -52,6 +52,7 @@ Single source of truth for which agent owns which ticket. **Read this file befor
 |--------|-------|--------|------------|-------|
 | CD-1 | claude-sonnet-4-6 | feature/cd-healthcheck-endpoint | 2026-04-11 | /api/healthz endpoint |
 | T-5.1 + T-5.2 | claude-sonnet-4-6 | feat/story-5.1-5.2-reports | 2026-04-16 | In Review — PR #177 |
+| T-5.3 + dashboard-live + tickets-ux | claude-sonnet-4-6 | feat/story-5.3-export-dashboard-tickets-ux | 2026-04-16 | In Progress |
 | T-3.1 + T-3.2 + T-3.3 | Nino | feat/story-3.1-3.3-assets-crud-ui | 2026-04-15 | In Review — PR #165 |
 
 ## Done

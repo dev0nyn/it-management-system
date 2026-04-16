@@ -5,7 +5,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -15,30 +14,19 @@ import {
 import {
   Eye,
   MoreHorizontal,
-  UserCheck,
   ArrowRight,
   Trash2,
   CircleDot,
   Timer,
   CheckCircle2,
   X,
-  UserX,
 } from "lucide-react";
 
 type TicketStatus = "open" | "in_progress" | "resolved" | "closed";
 
-export interface AssigneeOption {
-  id: string;
-  name: string;
-  email: string;
-}
-
 interface Props {
   currentStatus: TicketStatus;
-  currentAssigneeId: string | null;
-  assignees: AssigneeOption[];
   onView: () => void;
-  onAssign: (userId: string | null) => void;
   onMoveStatus: (status: TicketStatus) => void;
   onDelete: () => void;
 }
@@ -52,10 +40,7 @@ const STATUS_OPTIONS: { value: TicketStatus; label: string; icon: React.ElementT
 
 export function TicketCardMenu({
   currentStatus,
-  currentAssigneeId,
-  assignees,
   onView,
-  onAssign,
   onMoveStatus,
   onDelete,
 }: Props) {
@@ -75,7 +60,7 @@ export function TicketCardMenu({
         side="bottom"
         align="end"
         sideOffset={4}
-        className="min-w-[170px]"
+        className="min-w-[160px]"
         onClick={(e) => e.stopPropagation()}
       >
         <DropdownMenuGroup>
@@ -86,45 +71,6 @@ export function TicketCardMenu({
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
-
-        {/* Assign to */}
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <UserCheck className="h-3.5 w-3.5" />
-            Assign to
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>Staff</DropdownMenuLabel>
-              {assignees.map((a) => (
-                <DropdownMenuItem
-                  key={a.id}
-                  onClick={() => onAssign(a.id)}
-                  className={currentAssigneeId === a.id ? "font-semibold" : ""}
-                >
-                  <span className="h-5 w-5 rounded-full bg-gradient-to-br from-red-500/20 to-red-600/10 text-red-700 dark:text-red-400 text-[10px] font-bold flex items-center justify-center shrink-0">
-                    {a.name.split(" ").map((n) => n[0]).join("")}
-                  </span>
-                  {a.name}
-                </DropdownMenuItem>
-              ))}
-              {assignees.length === 0 && (
-                <DropdownMenuItem disabled>No staff found</DropdownMenuItem>
-              )}
-            </DropdownMenuGroup>
-            {currentAssigneeId && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => onAssign(null)}>
-                    <UserX className="h-3.5 w-3.5" />
-                    Unassign
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </>
-            )}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
 
         {/* Move to */}
         <DropdownMenuSub>
