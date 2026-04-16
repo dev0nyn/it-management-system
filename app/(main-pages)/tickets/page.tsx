@@ -3,7 +3,7 @@
 import { useState, useCallback, useId, useMemo, useRef, useEffect } from "react";
 import { TicketSubmitSheet } from "@/components/tickets/ticket-submit-sheet";
 import { TicketDetailSheet, type ApiTicket } from "@/components/tickets/ticket-detail-sheet";
-import { TicketCardMenu, type AssigneeOption } from "@/components/tickets/ticket-card-menu";
+import { TicketCardMenu } from "@/components/tickets/ticket-card-menu";
 import {
   Dialog,
   DialogContent,
@@ -47,7 +47,7 @@ import {
   Check,
   RefreshCw,
 } from "lucide-react";
-import { authFetch, getApiBase } from "@/lib/api-client";
+import { authFetch, getApiBase, getSessionUser, type SessionUser } from "@/lib/api-client";
 
 type TicketStatus = "open" | "in_progress" | "resolved" | "closed";
 type TicketPriority = "low" | "medium" | "high" | "urgent";
@@ -80,9 +80,7 @@ function formatRelative(iso: string) {
 }
 
 interface TicketCardMenuProps {
-  assignees: AssigneeOption[];
   onView: () => void;
-  onAssign: (userId: string | null) => void;
   onMoveStatus: (status: TicketStatus) => void;
   onDelete: () => void;
 }
@@ -93,11 +91,15 @@ function TicketCard({
   isDragging,
   onClick,
   menuProps,
+  onAssignToSelf,
+  currentUserId,
 }: {
   ticket: Ticket;
   isDragging?: boolean;
   onClick?: () => void;
   menuProps?: TicketCardMenuProps;
+  onAssignToSelf?: () => void;
+  currentUserId?: string;
 }) {
   const priority = priorityConfig[ticket.priority];
   const assigneeName = ticket.assigneeName ?? "Unassigned";
@@ -128,10 +130,7 @@ function TicketCard({
           {menuProps && (
             <TicketCardMenu
               currentStatus={ticket.status}
-              currentAssigneeId={ticket.assigneeId}
-              assignees={menuProps.assignees}
               onView={menuProps.onView}
-              onAssign={menuProps.onAssign}
               onMoveStatus={menuProps.onMoveStatus}
               onDelete={menuProps.onDelete}
             />
@@ -151,9 +150,9 @@ function TicketCard({
         </span>
       </div>
 
-      {/* Bottom row: Assignee + Meta */}
+      {/* Bottom row: Assignee + Take button + Meta */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
           <div className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
             assigneeName === "Unassigned"
               ? "bg-slate-100 dark:bg-zinc-800 text-slate-400"
@@ -161,9 +160,18 @@ function TicketCard({
           }`}>
             {initials}
           </div>
-          <span className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[100px]">
+          <span className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[80px]">
             {assigneeName}
           </span>
+          {onAssignToSelf && ticket.assigneeId !== currentUserId && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onAssignToSelf(); }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity text-[10px] font-semibold px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 shrink-0"
+            >
+              Take
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
           <span className="text-[10px] flex items-center gap-0.5">
@@ -181,10 +189,14 @@ function SortableTicket({
   ticket,
   onOpen,
   menuProps,
+  onAssignToSelf,
+  currentUserId,
 }: {
   ticket: Ticket;
   onOpen: (t: Ticket) => void;
   menuProps: TicketCardMenuProps;
+  onAssignToSelf?: () => void;
+  currentUserId?: string;
 }) {
   const {
     attributes,
@@ -206,7 +218,13 @@ function SortableTicket({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
-      <TicketCard ticket={ticket} onClick={() => onOpen(ticket)} menuProps={menuProps} />
+      <TicketCard
+        ticket={ticket}
+        onClick={() => onOpen(ticket)}
+        menuProps={menuProps}
+        onAssignToSelf={onAssignToSelf}
+        currentUserId={currentUserId}
+      />
     </div>
   );
 }
@@ -219,6 +237,8 @@ function KanbanColumn({
   onOpen,
   onAddTicket,
   getMenuProps,
+  onAssignToSelf,
+  currentUserId,
 }: {
   column: (typeof columns)[number];
   tickets: Ticket[];
@@ -226,6 +246,8 @@ function KanbanColumn({
   onOpen: (t: Ticket) => void;
   onAddTicket: () => void;
   getMenuProps: (t: Ticket) => TicketCardMenuProps;
+  onAssignToSelf?: (ticketId: string) => void;
+  currentUserId?: string;
 }) {
   const { setNodeRef } = useDroppable({ id: column.id });
   const ticketIds = tickets.map((t) => t.id);
@@ -261,7 +283,14 @@ function KanbanColumn({
       <div className="flex-1 px-2 pb-2 space-y-2 min-h-[150px]">
         <SortableContext items={ticketIds} strategy={verticalListSortingStrategy}>
           {tickets.map((ticket) => (
-            <SortableTicket key={ticket.id} ticket={ticket} onOpen={onOpen} menuProps={getMenuProps(ticket)} />
+            <SortableTicket
+              key={ticket.id}
+              ticket={ticket}
+              onOpen={onOpen}
+              menuProps={getMenuProps(ticket)}
+              onAssignToSelf={onAssignToSelf ? () => onAssignToSelf(ticket.id) : undefined}
+              currentUserId={currentUserId}
+            />
           ))}
         </SortableContext>
 
@@ -294,7 +323,7 @@ export default function TicketsPage() {
   const [submitSheetOpen, setSubmitSheetOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
-  const [staffUsers, setStaffUsers] = useState<AssigneeOption[]>([]);
+  const [currentUser, setCurrentUser] = useState<SessionUser | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Ticket | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
@@ -314,21 +343,9 @@ export default function TicketsPage() {
     }
   }
 
-  async function loadStaff() {
-    try {
-      const res = await authFetch(`${getApiBase()}/api/v1/assets/users`);
-      if (res.ok) {
-        const { data } = await res.json();
-        setStaffUsers(data ?? []);
-      }
-    } catch {
-      // silently fail
-    }
-  }
-
   useEffect(() => {
+    setCurrentUser(getSessionUser());
     loadTickets();
-    loadStaff();
   }, []);
 
   useEffect(() => {
@@ -396,25 +413,27 @@ export default function TicketsPage() {
     notifyChanged();
   }
 
-  async function handleQuickAssign(ticketId: string, userId: string | null) {
+  async function handleAssignToSelf(ticketId: string) {
+    if (!currentUser) return;
     const prev = tickets;
     setTickets((ts) =>
-      ts.map((t) => {
-        if (t.id !== ticketId) return t;
-        const assignee = staffUsers.find((u) => u.id === userId) ?? null;
-        return { ...t, assigneeId: userId, assigneeName: assignee?.name ?? null };
-      })
+      ts.map((t) =>
+        t.id === ticketId
+          ? { ...t, assigneeId: currentUser.id, assigneeName: currentUser.name }
+          : t
+      )
     );
     const res = await authFetch(`${getApiBase()}/api/v1/tickets/${ticketId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ assigneeId: userId }),
+      body: JSON.stringify({ assigneeId: currentUser.id }),
     });
     if (!res.ok) {
       setTickets(prev);
     } else {
       const { data } = await res.json();
       setTickets((ts) => ts.map((t) => (t.id === data.id ? data : t)));
+      notifyChanged();
     }
   }
 
@@ -453,14 +472,12 @@ export default function TicketsPage() {
 
   const getMenuProps = useCallback(
     (ticket: Ticket): TicketCardMenuProps => ({
-      assignees: staffUsers,
       onView: () => handleOpenTicket(ticket),
-      onAssign: (userId) => handleQuickAssign(ticket.id, userId),
       onMoveStatus: (status) => handleQuickStatus(ticket.id, status),
       onDelete: () => setDeleteTarget(ticket),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [staffUsers, tickets]
+    [tickets]
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -712,6 +729,12 @@ export default function TicketsPage() {
                       onOpen={handleOpenTicket}
                       onAddTicket={() => setSubmitSheetOpen(true)}
                       getMenuProps={getMenuProps}
+                      onAssignToSelf={
+                        currentUser && ["admin", "it_staff"].includes(currentUser.role)
+                          ? handleAssignToSelf
+                          : undefined
+                      }
+                      currentUserId={currentUser?.id}
                     />
                   </div>
                 </SortableContext>

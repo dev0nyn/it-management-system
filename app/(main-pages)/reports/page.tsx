@@ -8,6 +8,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -17,6 +18,8 @@ import {
   TrendingDown,
   Minus,
   Loader2,
+  FileText,
+  FileDown,
 } from "lucide-react";
 
 // Tailwind v4 safelist for dynamic Tremor color classes
@@ -59,9 +62,62 @@ function EmptyState({ label }: { label: string }) {
   );
 }
 
+function ExportMenu({ reportId, from, to }: { reportId: string; from: string; to: string }) {
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport(format: "csv" | "pdf") {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const qs = `?format=${format}&from=${from}&to=${to}`;
+      const res = await authFetch(`${getApiBase()}/api/v1/reports/${reportId}/export${qs}`);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${reportId}-${from}-${to}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors focus:outline-none"
+        title="Export"
+      >
+        {exporting ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Download className="h-3.5 w-3.5" />
+        )}
+        Export
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[140px]">
+        <DropdownMenuItem onClick={() => handleExport("csv")}>
+          <FileText className="h-3.5 w-3.5" />
+          Download CSV
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => handleExport("pdf")}>
+          <FileDown className="h-3.5 w-3.5" />
+          Download PDF
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export default function ReportsPage() {
   const [preset, setPreset] = useState<Preset>(DATE_PRESETS[3]); // Last 6 Months default
   const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState({ from: toIsoDate(daysAgo(DATE_PRESETS[3].days)), to: toIsoDate(new Date()) });
 
   const [statusData, setStatusData]       = useState<ReportResult | null>(null);
   const [resTimeData, setResTimeData]     = useState<ReportResult | null>(null);
@@ -72,6 +128,7 @@ export default function ReportsPage() {
     setLoading(true);
     const from = toIsoDate(daysAgo(p.days));
     const to   = toIsoDate(new Date());
+    setDateRange({ from, to });
     const qs   = `?from=${from}&to=${to}`;
 
     try {
@@ -204,9 +261,12 @@ export default function ReportsPage() {
         {/* Tickets by Status */}
         <div className="lg:col-span-4">
           <div className="rounded-2xl border bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-slate-200/50 dark:ring-white/10 h-full flex flex-col">
-            <div className="p-5 border-b border-slate-100 dark:border-white/5">
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Tickets by Status</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Distribution of ticket statuses for the selected period</p>
+            <div className="p-5 border-b border-slate-100 dark:border-white/5 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Tickets by Status</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Distribution of ticket statuses for the selected period</p>
+              </div>
+              <ExportMenu reportId="tickets-by-status" from={dateRange.from} to={dateRange.to} />
             </div>
             <div className="p-5 flex-1">
               {loading ? (
@@ -232,9 +292,12 @@ export default function ReportsPage() {
         {/* Asset Distribution */}
         <div className="lg:col-span-3">
           <div className="rounded-2xl border bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-slate-200/50 dark:ring-white/10 h-full flex flex-col">
-            <div className="p-5 border-b border-slate-100 dark:border-white/5">
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Asset Distribution</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Current inventory by status</p>
+            <div className="p-5 border-b border-slate-100 dark:border-white/5 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Asset Distribution</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Current inventory by status</p>
+              </div>
+              <ExportMenu reportId="assets-by-status" from={dateRange.from} to={dateRange.to} />
             </div>
             <div className="p-5 flex-1 flex flex-col items-center justify-center">
               {loading ? (
@@ -272,9 +335,12 @@ export default function ReportsPage() {
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
         {/* Resolution Time */}
         <div className="rounded-2xl border bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-slate-200/50 dark:ring-white/10 flex flex-col">
-          <div className="p-5 border-b border-slate-100 dark:border-white/5">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Resolution Time by Category</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Average hours to resolve by ticket type</p>
+          <div className="p-5 border-b border-slate-100 dark:border-white/5 flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Resolution Time by Category</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Average hours to resolve by ticket type</p>
+            </div>
+            <ExportMenu reportId="tickets-by-resolution-time" from={dateRange.from} to={dateRange.to} />
           </div>
           <div className="p-5 flex-1">
             {loading ? (
@@ -298,9 +364,12 @@ export default function ReportsPage() {
 
         {/* User Activity */}
         <div className="rounded-2xl border bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-slate-200/50 dark:ring-white/10 flex flex-col">
-          <div className="p-5 border-b border-slate-100 dark:border-white/5">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-white">User Activity</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Tickets created and resolved per user</p>
+          <div className="p-5 border-b border-slate-100 dark:border-white/5 flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">User Activity</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Tickets created and resolved per user</p>
+            </div>
+            <ExportMenu reportId="user-activity" from={dateRange.from} to={dateRange.to} />
           </div>
           <div className="p-5 flex-1">
             {loading ? (
