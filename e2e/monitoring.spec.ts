@@ -10,7 +10,7 @@ test.describe("Monitoring — device management (admin)", () => {
 
   test("monitoring page loads with status counters", async ({ page }) => {
     await page.goto(`${BASE}/monitoring`);
-    await expect(page.getByText("Monitoring")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Monitoring" })).toBeVisible();
 
     // Status counter tiles are visible
     await expect(page.getByTestId("up-count")).toBeVisible();
@@ -23,7 +23,7 @@ test.describe("Monitoring — device management (admin)", () => {
     request,
   }) => {
     // Get auth token from localStorage after login
-    const token = await page.evaluate(() => localStorage.getItem("accessToken"));
+    const token = await page.evaluate(() => localStorage.getItem("session_token"));
 
     // Create device via API
     const res = await request.post(`${BASE}/api/v1/devices`, {
@@ -55,7 +55,7 @@ test.describe("Monitoring — device management (admin)", () => {
   });
 
   test("delete device removes it from the list", async ({ page, request }) => {
-    const token = await page.evaluate(() => localStorage.getItem("accessToken"));
+    const token = await page.evaluate(() => localStorage.getItem("session_token"));
 
     // Create a device to delete
     const res = await request.post(`${BASE}/api/v1/devices`, {
@@ -96,7 +96,7 @@ test.describe("Monitoring — it_staff access", () => {
   test("it_staff can view devices but create button is absent", async ({ page }) => {
     await loginAsItStaff(page);
     await page.goto(`${BASE}/monitoring`);
-    await expect(page.getByText("Monitoring")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Monitoring" })).toBeVisible();
     await expect(page.getByTestId("up-count")).toBeVisible();
   });
 });

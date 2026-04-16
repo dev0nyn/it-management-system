@@ -22,13 +22,10 @@ test.describe("Ticket notifications — in-app", () => {
     await page.goto(`${BASE}/tickets`);
 
     // Click submit/new ticket button
-    await page.getByRole("button", { name: /new ticket|submit ticket/i }).click();
+    await page.getByRole("button", { name: /new ticket|submit ticket/i }).first().click();
 
-    await page.fill('[placeholder*="title" i], input[name="title"]', "E2E notification test");
-    await page.fill(
-      '[placeholder*="description" i], textarea[name="description"]',
-      "This ticket should trigger a notification"
-    );
+    await page.getByPlaceholder("Brief description of the issue").fill("E2E notification test");
+    await page.getByPlaceholder("Provide details about the issue").fill("This ticket should trigger a notification");
 
     // Select priority
     const prioritySelect = page.locator('select[name="priority"], [data-testid="priority-select"]');
@@ -42,10 +39,10 @@ test.describe("Ticket notifications — in-app", () => {
       await categorySelect.fill?.("hardware");
     }
 
-    await page.getByRole("button", { name: /submit|create/i }).last().click();
+    await page.getByRole("button", { name: "Submit Ticket" }).click();
 
-    // Wait for success (sheet closes or success toast)
-    await page.waitForTimeout(1500);
+    // Wait for success toast
+    await page.getByText("Ticket submitted!").waitFor({ timeout: 15_000 });
 
     // Verify via API that IT staff received a notification
     const adminToken = await getAdminToken(request);
@@ -125,9 +122,9 @@ test.describe("Ticket notifications — in-app", () => {
 async function getAdminToken(
   request: import("@playwright/test").APIRequestContext
 ): Promise<string> {
-  const res = await request.post(`${BASE}/api/v1/auth/login`, {
-    data: { email: "admin@example.com", password: "Admin1234!" },
+  const res = await request.post(`${BASE}/api/auth/login`, {
+    data: { email: "admin@itms.local", password: "Admin1234!" },
   });
-  const { data } = await res.json();
-  return data.accessToken;
+  const body = await res.json();
+  return body.token;
 }
