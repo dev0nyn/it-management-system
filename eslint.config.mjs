@@ -22,9 +22,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Git worktrees used by parallel agents — not part of this app
     ".claude/worktrees/**",
+    ".worktrees/**",
     "apps/**",
     "services/**",
-    "shared/**",
   ]),
 ]);
 
