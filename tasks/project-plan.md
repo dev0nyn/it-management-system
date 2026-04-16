@@ -282,6 +282,67 @@ Must complete before parallel work starts. One agent owns this.
 
 ---
 
+## Epic 8 — Integrations & MCP (post-MVP expansion)
+*Makes CoDev the IT substrate for the agent economy. Meets customers where they live (Jira, Google Chat). Exposes every module programmatically so AI and automation partners can build on top.*
+
+All 16 stories below are tracked as GitHub issues (`#182`–`#197`) and live on the project board with Priority + Size fields set.
+
+### MVP Integrations — must ship together as the v1 Integrations release
+
+#### Story 8.1 — MCP server exposing CoDev ITMS functionality — `[MVP · L]`
+Tracks `#182`. Stand up an MCP server exposing tickets, assets, users, monitoring state, alerts, and reports as tools usable by any MCP-compatible client (Claude Desktop, Cursor, custom agents). Foundation for Stories 8.2 and everything downstream.
+
+#### Story 8.2 — Bidirectional Jira ↔ CoDev ticket sync via MCP — `[MVP · L]`
+Tracks `#183`. Two-way sync between Jira issues and CoDev tickets. Implemented agent-to-agent: CoDev's MCP server (Story 8.1) + the Atlassian MCP server orchestrated by a BullMQ reconciliation worker. Declarative field map, last-writer-wins conflict resolution. Depends on Story 8.1.
+
+#### Story 8.3 — Google Chat notifications and slash commands — `[MVP · M]`
+Tracks `#184`. New `GoogleChatNotificationProvider` behind the existing `NotificationService` interface. Inbound slash commands (`/ticket new`, `/ticket status`, `/asset assign`, `/ping`) via a signed webhook route that dispatches to existing service handlers. Independent — can ship in parallel with 8.1 and 8.2.
+
+### P1 Enablement — ships right after MVP; unlocks enterprise segments
+
+#### Story 8.4 — MCP OAuth 2.0 / OIDC authentication — `[P1 · M]`
+Tracks `#185`. Replace the MVP API-key flow with OAuth 2.0 / OIDC for enterprise customers. Needed for SOC 2 and larger buyers.
+
+#### Story 8.5 — MCP server per-tenant multi-tenancy — `[P1 · L]`
+Tracks `#187`. Tenant isolation on the MCP server (per-tenant auth, per-tenant data scoping, per-tenant rate limits). Prerequisite for hosted SaaS.
+
+#### Story 8.6 — Real-time Jira webhook ingest (replace polling) — `[P1 · M]`
+Tracks `#193`. Upgrade the Jira sync from 30-second polling to webhook-driven real-time. Clear marketing/selling point and halves sync latency.
+
+#### Story 8.7 — Google Workspace directory sync for identity resolution — `[P1 · M]`
+Tracks `#195`. Resolve Google Chat callers to CoDev users automatically via Workspace directory. Removes the manual account-linking friction that blocks slash-command adoption.
+
+### P2 Breadth & Polish — fill out the integration surface once the core holds
+
+#### Story 8.8 — MCP resources and prompt templates (v2) — `[P2 · M]`
+Tracks `#186`. Expose MCP resources + prompts (beyond tools) so agents can read context and use curated prompt templates.
+
+#### Story 8.9 — API key management UI for MCP server — `[P2 · S]`
+Tracks `#188`. Admin UI for provisioning, rotating, and revoking MCP API keys (MVP uses the admin API or seed script).
+
+#### Story 8.10 — Streaming partial results for `run_report` tool — `[P2 · M]`
+Tracks `#189`. Stream large reports over MCP instead of returning one blocking payload.
+
+#### Story 8.11 — Jira multi-project sync support — `[P2 · M]`
+Tracks `#190`. Sync tickets across multiple Jira projects simultaneously, with per-project field maps.
+
+#### Story 8.12 — Jira attachment, subtask, and custom field sync — `[P2 · L]`
+Tracks `#191`. Extend Jira sync beyond the core ticket fields to cover attachments, subtasks, and custom fields.
+
+#### Story 8.13 — Jira field map configuration UI — `[P2 · M]`
+Tracks `#192`. Visual editor for the Jira ↔ CoDev field map (MVP ships as a config file).
+
+#### Story 8.14 — Sync CoDev assets and users to Jira — `[P2 · M]`
+Tracks `#194`. Expand sync beyond tickets — push CoDev asset and user data into Jira custom fields / entities.
+
+#### Story 8.15 — Google Chat interactive card buttons and dialogs — `[P2 · M]`
+Tracks `#196`. Rich interactive cards (approve/deny buttons, resolution dialogs) — MVP ships with text-only ephemeral responses.
+
+#### Story 8.16 — Google Chat DM notifications for assigned users — `[P2 · S]`
+Tracks `#197`. Direct-message assignees instead of only posting to shared spaces.
+
+---
+
 ## Parallelization Map
 
 | Wave | Agent A | Agent B | Agent C | Agent D | Agent E |
