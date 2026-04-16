@@ -1,7 +1,13 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/lib/db";
-import { tickets, type NewTicket, type Ticket } from "@/lib/db/schema/tickets";
+import {
+  tickets,
+  ticketEvents,
+  type NewTicket,
+  type Ticket,
+  type NewTicketEvent,
+} from "@/lib/db/schema/tickets";
 import { users } from "@/lib/db/schema/users";
 
 const reporterAlias = alias(users, "reporter");
@@ -77,4 +83,26 @@ export async function findUserById(id: string) {
     .from(users)
     .where(eq(users.id, id));
   return rows[0] ?? null;
+}
+
+export async function createEvent(event: NewTicketEvent) {
+  const [row] = await db.insert(ticketEvents).values(event).returning();
+  return row;
+}
+
+export async function findEventsByTicketId(ticketId: string) {
+  return db
+    .select({
+      id: ticketEvents.id,
+      ticketId: ticketEvents.ticketId,
+      actorId: ticketEvents.actorId,
+      actorName: ticketEvents.actorName,
+      eventType: ticketEvents.eventType,
+      oldValue: ticketEvents.oldValue,
+      newValue: ticketEvents.newValue,
+      createdAt: ticketEvents.createdAt,
+    })
+    .from(ticketEvents)
+    .where(eq(ticketEvents.ticketId, ticketId))
+    .orderBy(desc(ticketEvents.createdAt));
 }

@@ -33,3 +33,19 @@ export const tickets = pgTable("tickets", {
 
 export type Ticket = typeof tickets.$inferSelect;
 export type NewTicket = typeof tickets.$inferInsert;
+
+export const ticketEvents = pgTable("ticket_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ticketId: uuid("ticket_id")
+    .notNull()
+    .references(() => tickets.id, { onDelete: "cascade" }),
+  actorId: uuid("actor_id").references(() => users.id),
+  actorName: text("actor_name"),
+  eventType: text("event_type").notNull(),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type TicketEvent = typeof ticketEvents.$inferSelect;
+export type NewTicketEvent = typeof ticketEvents.$inferInsert;
