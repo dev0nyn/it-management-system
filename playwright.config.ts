@@ -27,4 +27,5 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
+  // Do not start a dev server — tests assume dev stack is already running
 });
