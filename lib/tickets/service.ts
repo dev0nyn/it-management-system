@@ -66,8 +66,34 @@ export async function getTicket(id: string) {
 export async function updateTicket(id: string, input: UpdateTicketInput) {
   const existing = await repo.findById(id);
   if (!existing) throw new TicketNotFoundError(`Ticket ${id} not found`);
+
   const updated = await repo.update(id, input);
   if (!updated) throw new TicketNotFoundError(`Ticket ${id} not found`);
+
+  // Notify new assignee if assigneeId changed to a non-null value
+  const assigneeChanged =
+    input.assigneeId !== undefined && input.assigneeId !== existing.assigneeId;
+  if (assigneeChanged && input.assigneeId) {
+    try {
+      const assignee = await repo.findUserById(input.assigneeId);
+      if (assignee) {
+        const notifier = createNotificationService();
+        await notifier.notify(
+          [{ userId: assignee.id, email: assignee.email, name: assignee.name }],
+          {
+            channel: "in-app",
+            inApp: {
+              title: "Ticket assigned to you",
+              body: `[${updated.priority.toUpperCase()}] ${updated.title}`,
+            },
+          }
+        );
+      }
+    } catch (err) {
+      console.error("[tickets] reassignment notification failed:", err);
+    }
+  }
+
   return updated;
 }
 

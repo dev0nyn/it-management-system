@@ -52,6 +52,7 @@ Single source of truth for which agent owns which ticket. **Read this file befor
 |--------|-------|--------|------------|-------|
 | CD-1 | claude-sonnet-4-6 | feature/cd-healthcheck-endpoint | 2026-04-11 | /api/healthz endpoint |
 | T-3.1 + T-3.2 + T-3.3 | Nino | feat/story-3.1-3.3-assets-crud-ui | 2026-04-15 | In Review — PR #165 |
+| T-4.3 + T-6.1 + T-6.2 + T-6.3 + T-6.4 | claude-sonnet-4-6 | feature/story-4.3-and-epic-6-monitoring | 2026-04-16 | bullmq dep, migration 0003, instrumentationHook |
 
 ## Done
 | Ticket | Agent | PR | Merged At |
@@ -75,6 +76,7 @@ Sequential — grab the next number, don't skip.
 | 0001 | initial_schema | _(Epic 0 owner)_ | T-0.2 | reserved |
 | 0001 | tickets_table | Nino | T-4.1 | merged |
 | 0002 | assets_table | Nino | T-3.1 | reserved |
+| 0003 | monitoring_tables | claude-sonnet-4-6 | T-6.1 | reserved |
 
 ## Cross-agent Requests
 Need a change in someone else's module? Drop it here instead of editing their code.
