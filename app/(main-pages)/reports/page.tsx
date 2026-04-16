@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { authFetch, getApiBase } from "@/lib/api-client";
 import { AreaChart, BarChart, DonutChart } from "@tremor/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -74,11 +75,12 @@ export default function ReportsPage() {
     const qs   = `?from=${from}&to=${to}`;
 
     try {
+      const base = getApiBase();
       const [s, r, a, u] = await Promise.all([
-        fetch(`/api/v1/reports/tickets-by-status${qs}`).then((res) => res.json()),
-        fetch(`/api/v1/reports/tickets-by-resolution-time${qs}`).then((res) => res.json()),
-        fetch(`/api/v1/reports/assets-by-status`).then((res) => res.json()),
-        fetch(`/api/v1/reports/user-activity${qs}`).then((res) => res.json()),
+        authFetch(`${base}/api/v1/reports/tickets-by-status${qs}`).then((res) => res.json()),
+        authFetch(`${base}/api/v1/reports/tickets-by-resolution-time${qs}`).then((res) => res.json()),
+        authFetch(`${base}/api/v1/reports/assets-by-status`).then((res) => res.json()),
+        authFetch(`${base}/api/v1/reports/user-activity${qs}`).then((res) => res.json()),
       ]);
       setStatusData(s.data ?? null);
       setResTimeData(r.data ?? null);
