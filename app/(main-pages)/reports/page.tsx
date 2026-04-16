@@ -1,62 +1,146 @@
 "use client";
 
+import { useEffect, useState, useCallback } from "react";
 import { AreaChart, BarChart, DonutChart } from "@tremor/react";
 import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Download,
-  FileText,
   Calendar,
   TrendingUp,
   TrendingDown,
   Minus,
-  BarChart3,
+  Loader2,
 } from "lucide-react";
 
 // Tailwind v4 safelist for dynamic Tremor color classes
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _safelist = "bg-fuchsia-500 text-fuchsia-500 fill-fuchsia-500 stroke-fuchsia-500 bg-cyan-500 text-cyan-500 fill-cyan-500 stroke-cyan-500 bg-sky-500 text-sky-500 fill-sky-500 stroke-sky-500 bg-amber-500 text-amber-500 fill-amber-500 stroke-amber-500 bg-emerald-500 text-emerald-500 fill-emerald-500 stroke-emerald-500 bg-violet-500 text-violet-500 fill-violet-500 stroke-violet-500 bg-rose-500 text-rose-500 fill-rose-500 stroke-rose-500";
 
-const ticketsByMonth = [
-  { month: "Oct", Created: 38, Resolved: 35, Overdue: 3 },
-  { month: "Nov", Created: 45, Resolved: 42, Overdue: 5 },
-  { month: "Dec", Created: 32, Resolved: 30, Overdue: 2 },
-  { month: "Jan", Created: 52, Resolved: 48, Overdue: 6 },
-  { month: "Feb", Created: 48, Resolved: 50, Overdue: 4 },
-  { month: "Mar", Created: 61, Resolved: 55, Overdue: 8 },
-];
+const DATE_PRESETS = [
+  { label: "Last 7 Days",   days: 7   },
+  { label: "Last 30 Days",  days: 30  },
+  { label: "Last 3 Months", days: 90  },
+  { label: "Last 6 Months", days: 180 },
+  { label: "Last Year",     days: 365 },
+] as const;
 
-const resolutionTimeData = [
-  { category: "Hardware", "Avg Hours": 18 },
-  { category: "Software", "Avg Hours": 8 },
-  { category: "Network", "Avg Hours": 12 },
-  { category: "Access", "Avg Hours": 4 },
-  { category: "Security", "Avg Hours": 24 },
-  { category: "Infrastructure", "Avg Hours": 36 },
-];
+type Preset = (typeof DATE_PRESETS)[number];
 
-const assetsByStatus = [
-  { name: "Assigned", value: 340 },
-  { name: "Available", value: 85 },
-  { name: "Maintenance", value: 22 },
-  { name: "Retired", value: 53 },
-];
+interface ReportResult {
+  columns: string[];
+  rows: Record<string, unknown>[];
+  generatedAt: string;
+}
 
-const staffPerformance = [
-  { name: "Mike Chen", Resolved: 45, "Avg Time (h)": 14 },
-  { name: "Alex Kim", Resolved: 38, "Avg Time (h)": 10 },
-  { name: "Jess Park", Resolved: 52, "Avg Time (h)": 8 },
-];
+function daysAgo(n: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
 
-const kpis = [
-  { label: "Avg Resolution Time", value: "14.2h", change: "-2.3h", trend: "down" as const, good: true },
-  { label: "First Response Time", value: "28m", change: "-5m", trend: "down" as const, good: true },
-  { label: "Open Tickets", value: "12", change: "+2", trend: "up" as const, good: false },
-  { label: "SLA Compliance", value: "94.5%", change: "+1.2%", trend: "up" as const, good: true },
-  { label: "Customer Satisfaction", value: "4.6/5", change: "0.0", trend: "flat" as const, good: true },
-  { label: "Total Assets Value", value: "$485K", change: "+$23K", trend: "up" as const, good: true },
-];
+function toIsoDate(d: Date) {
+  return d.toISOString().split("T")[0];
+}
+
+function EmptyState({ label }: { label: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-slate-400 dark:text-slate-500">
+      <Minus className="h-8 w-8 mb-2 opacity-40" />
+      <p className="text-sm">No {label} data for this period</p>
+    </div>
+  );
+}
 
 export default function ReportsPage() {
+  const [preset, setPreset] = useState<Preset>(DATE_PRESETS[3]); // Last 6 Months default
+  const [loading, setLoading] = useState(true);
+
+  const [statusData, setStatusData]       = useState<ReportResult | null>(null);
+  const [resTimeData, setResTimeData]     = useState<ReportResult | null>(null);
+  const [assetsData, setAssetsData]       = useState<ReportResult | null>(null);
+  const [activityData, setActivityData]   = useState<ReportResult | null>(null);
+
+  const fetchReports = useCallback(async (p: Preset) => {
+    setLoading(true);
+    const from = toIsoDate(daysAgo(p.days));
+    const to   = toIsoDate(new Date());
+    const qs   = `?from=${from}&to=${to}`;
+
+    try {
+      const [s, r, a, u] = await Promise.all([
+        fetch(`/api/v1/reports/tickets-by-status${qs}`).then((res) => res.json()),
+        fetch(`/api/v1/reports/tickets-by-resolution-time${qs}`).then((res) => res.json()),
+        fetch(`/api/v1/reports/assets-by-status`).then((res) => res.json()),
+        fetch(`/api/v1/reports/user-activity${qs}`).then((res) => res.json()),
+      ]);
+      setStatusData(s.data ?? null);
+      setResTimeData(r.data ?? null);
+      setAssetsData(a.data ?? null);
+      setActivityData(u.data ?? null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchReports(preset);
+  }, [preset, fetchReports]);
+
+  // ── Derived KPIs ────────────────────────────────────────────────────────────
+  const statusRows = (statusData?.rows ?? []) as { status: string; count: number }[];
+  const openCount      = statusRows.find((r) => r.status === "open")?.count ?? 0;
+  const inProgressCount = statusRows.find((r) => r.status === "in_progress")?.count ?? 0;
+  const resolvedCount  = statusRows.filter((r) => ["resolved", "closed"].includes(r.status)).reduce((s, r) => s + r.count, 0);
+
+  const resRows = (resTimeData?.rows ?? []) as { category: string; avgHours: number }[];
+  const avgResTime = resRows.length > 0
+    ? (resRows.reduce((s, r) => s + r.avgHours, 0) / resRows.length).toFixed(1) + "h"
+    : "—";
+
+  const assetRows = (assetsData?.rows ?? []) as { status: string; count: number }[];
+  const totalAssets    = assetRows.reduce((s, r) => s + r.count, 0);
+  const assignedAssets = assetRows.find((r) => r.status === "assigned")?.count ?? 0;
+
+  const kpis = [
+    { label: "Open Tickets",         value: String(openCount),       change: "", trend: "flat" as const, good: true  },
+    { label: "In Progress",          value: String(inProgressCount), change: "", trend: "flat" as const, good: true  },
+    { label: "Resolved This Period", value: String(resolvedCount),   change: "", trend: "up"   as const, good: true  },
+    { label: "Avg Resolution Time",  value: avgResTime,              change: "", trend: "down" as const, good: true  },
+    { label: "Total Assets",         value: String(totalAssets),     change: "", trend: "flat" as const, good: true  },
+    { label: "Assets Assigned",      value: String(assignedAssets),  change: "", trend: "up"   as const, good: true  },
+  ];
+
+  // ── Chart shapes ────────────────────────────────────────────────────────────
+  const statusChartData = statusRows.map((r) => ({
+    status: r.status.replace("_", " "),
+    Count: r.count,
+  }));
+
+  const resTimeChartData = resRows.map((r) => ({
+    category: r.category,
+    "Avg Hours": r.avgHours,
+  }));
+
+  const assetDonutData = assetRows.map((r) => ({
+    name: r.status.replace("_", " "),
+    value: r.count,
+  }));
+
+  const activityRows = (activityData?.rows ?? []) as { name: string; created: number; resolved: number }[];
+  const activityChartData = activityRows
+    .filter((r) => r.created > 0 || r.resolved > 0)
+    .map((r) => ({ name: r.name, Resolved: r.resolved, Created: r.created }));
+
+  const donutColors = ["sky", "emerald", "amber", "violet"] as const;
+  const donutBgColors = ["bg-sky-500", "bg-emerald-500", "bg-amber-500", "bg-violet-500"];
+
   return (
     <div className="flex-1 space-y-6 p-4 sm:p-6 md:p-8 pt-6">
       {/* Header */}
@@ -66,13 +150,31 @@ export default function ReportsPage() {
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Analytics and insights for IT operations</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="rounded-xl h-10 gap-2 border-slate-200 dark:border-white/10">
-            <Calendar className="h-4 w-4" />
-            Last 6 Months
-          </Button>
-          <Button className="bg-red-600 hover:bg-red-700 text-white shadow-md rounded-xl h-10 px-4 gap-2">
-            <Download className="h-4 w-4" />
-            Export
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-2 rounded-xl h-10 px-3 text-sm border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors focus:outline-none">
+              <Calendar className="h-4 w-4" />
+              {preset.label}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {DATE_PRESETS.map((p) => (
+                <DropdownMenuItem
+                  key={p.label}
+                  onClick={() => setPreset(p)}
+                  className={preset.label === p.label ? "font-semibold" : ""}
+                >
+                  {p.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Button
+            className="bg-red-600 hover:bg-red-700 text-white shadow-md rounded-xl h-10 px-4 gap-2"
+            onClick={() => fetchReports(preset)}
+            disabled={loading}
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {loading ? "Loading…" : "Refresh"}
           </Button>
         </div>
       </div>
@@ -82,14 +184,13 @@ export default function ReportsPage() {
         {kpis.map((kpi) => {
           const TrendIcon = kpi.trend === "up" ? TrendingUp : kpi.trend === "down" ? TrendingDown : Minus;
           return (
-            <div key={kpi.label} className="rounded-2xl border bg-white dark:bg-zinc-900 p-4 shadow-sm ring-1 ring-slate-200/50 dark:ring-white/10">
+            <div key={kpi.label} className={`rounded-2xl border bg-white dark:bg-zinc-900 p-4 shadow-sm ring-1 ring-slate-200/50 dark:ring-white/10 transition-opacity ${loading ? "opacity-50" : ""}`}>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-2">{kpi.label}</p>
               <p className="text-xl font-bold text-slate-800 dark:text-white">{kpi.value}</p>
               <div className={`flex items-center gap-1 mt-1.5 text-xs font-medium ${
                 kpi.good ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
               }`}>
                 <TrendIcon className="h-3 w-3" />
-                <span>{kpi.change}</span>
               </div>
             </div>
           );
@@ -98,28 +199,35 @@ export default function ReportsPage() {
 
       {/* Charts Row 1 */}
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-7">
+        {/* Tickets by Status */}
         <div className="lg:col-span-4">
           <div className="rounded-2xl border bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-slate-200/50 dark:ring-white/10 h-full flex flex-col">
             <div className="p-5 border-b border-slate-100 dark:border-white/5">
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Ticket Volume Trend</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Created vs resolved tickets per month</p>
+              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Tickets by Status</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Distribution of ticket statuses for the selected period</p>
             </div>
             <div className="p-5 flex-1">
-              <AreaChart
-                className="h-72 w-full"
-                data={ticketsByMonth}
-                index="month"
-                categories={["Created", "Resolved", "Overdue"]}
-                colors={["fuchsia", "cyan", "rose"]}
-                yAxisWidth={40}
-                showAnimation
-                showGridLines
-                curveType="natural"
-              />
+              {loading ? (
+                <div className="flex items-center justify-center h-72"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
+              ) : statusChartData.length === 0 ? (
+                <EmptyState label="ticket" />
+              ) : (
+                <BarChart
+                  className="h-72 w-full"
+                  data={statusChartData}
+                  index="status"
+                  categories={["Count"]}
+                  colors={["fuchsia"]}
+                  yAxisWidth={40}
+                  showAnimation
+                  showGridLines
+                />
+              )}
             </div>
           </div>
         </div>
 
+        {/* Asset Distribution */}
         <div className="lg:col-span-3">
           <div className="rounded-2xl border bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-slate-200/50 dark:ring-white/10 h-full flex flex-col">
             <div className="p-5 border-b border-slate-100 dark:border-white/5">
@@ -127,27 +235,32 @@ export default function ReportsPage() {
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Current inventory by status</p>
             </div>
             <div className="p-5 flex-1 flex flex-col items-center justify-center">
-              <DonutChart
-                className="h-56 w-full"
-                data={assetsByStatus}
-                category="value"
-                index="name"
-                colors={["sky", "emerald", "amber", "violet"]}
-                valueFormatter={(n) => Intl.NumberFormat("us").format(n).toString()}
-                showAnimation
-              />
-              <div className="mt-6 grid grid-cols-2 gap-3 w-full">
-                {assetsByStatus.map((item, i) => {
-                  const colors = ["bg-sky-500", "bg-emerald-500", "bg-amber-500", "bg-violet-500"];
-                  return (
-                    <div key={item.name} className="flex items-center gap-2">
-                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${colors[i]}`} />
-                      <span className="text-xs text-slate-500 dark:text-slate-400">{item.name}</span>
-                      <span className="text-xs font-semibold text-slate-700 dark:text-white ml-auto">{item.value}</span>
-                    </div>
-                  );
-                })}
-              </div>
+              {loading ? (
+                <div className="flex items-center justify-center h-56"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
+              ) : assetDonutData.length === 0 ? (
+                <EmptyState label="asset" />
+              ) : (
+                <>
+                  <DonutChart
+                    className="h-56 w-full"
+                    data={assetDonutData}
+                    category="value"
+                    index="name"
+                    colors={[...donutColors]}
+                    valueFormatter={(n) => Intl.NumberFormat("us").format(n).toString()}
+                    showAnimation
+                  />
+                  <div className="mt-6 grid grid-cols-2 gap-3 w-full">
+                    {assetDonutData.map((item, i) => (
+                      <div key={item.name} className="flex items-center gap-2">
+                        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${donutBgColors[i % donutBgColors.length]}`} />
+                        <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">{item.name}</span>
+                        <span className="text-xs font-semibold text-slate-700 dark:text-white ml-auto">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -155,64 +268,83 @@ export default function ReportsPage() {
 
       {/* Charts Row 2 */}
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        {/* Resolution Time */}
         <div className="rounded-2xl border bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-slate-200/50 dark:ring-white/10 flex flex-col">
           <div className="p-5 border-b border-slate-100 dark:border-white/5">
             <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Resolution Time by Category</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Average hours to resolve by ticket type</p>
           </div>
           <div className="p-5 flex-1">
-            <BarChart
-              className="h-64 w-full"
-              data={resolutionTimeData}
-              index="category"
-              categories={["Avg Hours"]}
-              colors={["fuchsia"]}
-              yAxisWidth={50}
-              showAnimation
-              showGridLines
-            />
+            {loading ? (
+              <div className="flex items-center justify-center h-64"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
+            ) : resTimeChartData.length === 0 ? (
+              <EmptyState label="resolution" />
+            ) : (
+              <BarChart
+                className="h-64 w-full"
+                data={resTimeChartData}
+                index="category"
+                categories={["Avg Hours"]}
+                colors={["fuchsia"]}
+                yAxisWidth={50}
+                showAnimation
+                showGridLines
+              />
+            )}
           </div>
         </div>
 
+        {/* User Activity */}
         <div className="rounded-2xl border bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-slate-200/50 dark:ring-white/10 flex flex-col">
           <div className="p-5 border-b border-slate-100 dark:border-white/5">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Staff Performance</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Tickets resolved and avg resolution time</p>
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-white">User Activity</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Tickets created and resolved per user</p>
           </div>
           <div className="p-5 flex-1">
-            <BarChart
-              className="h-64 w-full"
-              data={staffPerformance}
-              index="name"
-              categories={["Resolved", "Avg Time (h)"]}
-              colors={["cyan", "amber"]}
-              yAxisWidth={40}
-              showAnimation
-              showGridLines
-            />
+            {loading ? (
+              <div className="flex items-center justify-center h-64"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
+            ) : activityChartData.length === 0 ? (
+              <EmptyState label="activity" />
+            ) : (
+              <BarChart
+                className="h-64 w-full"
+                data={activityChartData}
+                index="name"
+                categories={["Resolved", "Created"]}
+                colors={["cyan", "amber"]}
+                yAxisWidth={40}
+                showAnimation
+                showGridLines
+              />
+            )}
           </div>
         </div>
       </div>
 
-      {/* Quick Reports */}
-      <div className="rounded-2xl border bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-slate-200/50 dark:ring-white/10 p-5">
-        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">Quick Reports</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {[
-            { title: "Monthly Ticket Summary", desc: "All tickets created and resolved this month", icon: BarChart3 },
-            { title: "Asset Inventory Report", desc: "Complete list of all assets with status", icon: FileText },
-            { title: "User Activity Log", desc: "Login history and actions per user", icon: FileText },
-            { title: "SLA Compliance Report", desc: "Ticket resolution times vs SLA targets", icon: BarChart3 },
-          ].map((report) => (
-            <button
-              key={report.title}
-              className="text-left p-4 rounded-xl border border-slate-200 dark:border-white/10 hover:border-red-300 dark:hover:border-red-500/30 hover:bg-red-50/50 dark:hover:bg-red-500/5 transition-all group"
-            >
-              <report.icon className="h-5 w-5 text-red-600 dark:text-red-400 mb-2" />
-              <p className="text-sm font-semibold text-slate-800 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">{report.title}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{report.desc}</p>
-            </button>
-          ))}
+      {/* Ticket Trend (Area chart — all-time) */}
+      <div className="rounded-2xl border bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-slate-200/50 dark:ring-white/10 flex flex-col">
+        <div className="p-5 border-b border-slate-100 dark:border-white/5">
+          <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Status Overview</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Ticket counts across all statuses for the selected period</p>
+        </div>
+        <div className="p-5">
+          {loading ? (
+            <div className="flex items-center justify-center h-48"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
+          ) : statusChartData.length === 0 ? (
+            <EmptyState label="ticket" />
+          ) : (
+            <AreaChart
+              className="h-48 w-full"
+              data={statusChartData}
+              index="status"
+              categories={["Count"]}
+              colors={["fuchsia"]}
+              yAxisWidth={40}
+              showAnimation
+              showGridLines
+              curveType="natural"
+            />
+          )}
         </div>
       </div>
     </div>
