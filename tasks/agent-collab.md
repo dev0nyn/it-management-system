@@ -51,12 +51,13 @@ Single source of truth for which agent owns which ticket. **Read this file befor
 | Ticket | Agent | Branch | Claimed At | Notes |
 |--------|-------|--------|------------|-------|
 | CD-1 | claude-sonnet-4-6 | feature/cd-healthcheck-endpoint | 2026-04-11 | /api/healthz endpoint |
+| T-5.1 + T-5.2 | claude-sonnet-4-6 | feat/story-5.1-5.2-reports | 2026-04-16 | In Review — PR #177 |
 | T-3.1 + T-3.2 + T-3.3 | Nino | feat/story-3.1-3.3-assets-crud-ui | 2026-04-15 | In Review — PR #165 |
-| T-4.3 + T-6.1 + T-6.2 + T-6.3 + T-6.4 | claude-sonnet-4-6 | feature/story-4.3-and-epic-6-monitoring | 2026-04-16 | bullmq dep, migration 0003, instrumentationHook |
 
 ## Done
 | Ticket | Agent | PR | Merged At |
 |--------|-------|----|-----------|
+| T-4.3 + T-6.1 + T-6.2 + T-6.3 + T-6.4 | claude-sonnet-4-6 | [#176](https://github.com/dev0nyn/it-management-system/pull/176) | 2026-04-16 |
 | T-1.2 | Nino | [#98](https://github.com/dev0nyn/it-management-system/pull/98) | 2026-04-10 |
 | T-2.2 | Nino | [#129](https://github.com/dev0nyn/it-management-system/pull/129) | 2026-04-11 |
 | T-4.1 | Nino | [#164](https://github.com/dev0nyn/it-management-system/pull/164) | 2026-04-15 |

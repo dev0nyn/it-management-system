@@ -165,6 +165,128 @@ try {
     console.log(`  seed  ${a.tag} — ${a.name}  [${a.status}]`);
   }
 
+  // ── Seed sample tickets ────────────────────────────────────────────────────
+  console.log("\n🌱  Seeding sample tickets...");
+  const carolId2 = insertedUsers["user@itms.local"];
+  const daveId   = insertedUsers["user2@itms.local"];
+  const staffId  = insertedUsers["staff@itms.local"];
+
+  if (carolId2 && daveId && staffId) {
+    const existing = await sql`SELECT COUNT(*) as c FROM tickets WHERE created_by IN (${carolId2}, ${daveId})`;
+    if (Number(existing[0].c) > 0) {
+      console.log(`  skip  tickets (already exist)`);
+    } else {
+      // Helper: offset days from a base date
+      const d = (base, offsetDays, offsetHours = 0) => {
+        const dt = new Date(base);
+        dt.setDate(dt.getDate() + offsetDays);
+        dt.setHours(dt.getHours() + offsetHours);
+        return dt.toISOString();
+      };
+
+      // Base date is 6 months ago from today
+      const SIX_MONTHS_AGO = new Date();
+      SIX_MONTHS_AGO.setMonth(SIX_MONTHS_AGO.getMonth() - 6);
+
+      // Resolution hours by category (for closed/resolved tickets)
+      const resolutionHours = {
+        Hardware: 18, Software: 8, Network: 12, Access: 4, Security: 24, Infrastructure: 36,
+      };
+
+      const TICKETS = [
+        // ── Month 1 (days 0–29) ──────────────────────────────────────────────
+        { title: "Laptop keyboard not working", category: "Hardware",       priority: "high",   status: "closed",      createdBy: carolId2, assigneeId: staffId, dayOffset: 2  },
+        { title: "Cannot access VPN",           category: "Network",        priority: "urgent", status: "closed",      createdBy: daveId,   assigneeId: staffId, dayOffset: 3  },
+        { title: "Excel crashing on startup",   category: "Software",       priority: "medium", status: "resolved",    createdBy: carolId2, assigneeId: staffId, dayOffset: 5  },
+        { title: "Password reset request",      category: "Access",         priority: "low",    status: "closed",      createdBy: daveId,   assigneeId: null,    dayOffset: 7  },
+        { title: "Monitor flickering",          category: "Hardware",       priority: "medium", status: "resolved",    createdBy: carolId2, assigneeId: staffId, dayOffset: 10 },
+        { title: "Suspicious login attempt",    category: "Security",       priority: "urgent", status: "closed",      createdBy: daveId,   assigneeId: staffId, dayOffset: 12 },
+        { title: "Printer offline",             category: "Hardware",       priority: "low",    status: "resolved",    createdBy: carolId2, assigneeId: null,    dayOffset: 14 },
+        { title: "Network drive inaccessible",  category: "Network",        priority: "high",   status: "closed",      createdBy: daveId,   assigneeId: staffId, dayOffset: 17 },
+        { title: "Outlook sync issue",          category: "Software",       priority: "medium", status: "resolved",    createdBy: carolId2, assigneeId: staffId, dayOffset: 20 },
+        { title: "New user account setup",      category: "Access",         priority: "low",    status: "closed",      createdBy: daveId,   assigneeId: null,    dayOffset: 22 },
+        // ── Month 2 (days 30–59) ─────────────────────────────────────────────
+        { title: "Server disk space critical",  category: "Infrastructure", priority: "urgent", status: "closed",      createdBy: carolId2, assigneeId: staffId, dayOffset: 32 },
+        { title: "WiFi dropping frequently",    category: "Network",        priority: "high",   status: "resolved",    createdBy: daveId,   assigneeId: staffId, dayOffset: 35 },
+        { title: "Teams audio not working",     category: "Software",       priority: "medium", status: "closed",      createdBy: carolId2, assigneeId: null,    dayOffset: 37 },
+        { title: "Phishing email reported",     category: "Security",       priority: "urgent", status: "closed",      createdBy: daveId,   assigneeId: staffId, dayOffset: 40 },
+        { title: "Workstation won't boot",      category: "Hardware",       priority: "high",   status: "resolved",    createdBy: carolId2, assigneeId: staffId, dayOffset: 42 },
+        { title: "USB port broken",             category: "Hardware",       priority: "low",    status: "closed",      createdBy: daveId,   assigneeId: null,    dayOffset: 44 },
+        { title: "Shared folder permissions",   category: "Access",         priority: "medium", status: "resolved",    createdBy: carolId2, assigneeId: staffId, dayOffset: 47 },
+        { title: "VPN slow connection",         category: "Network",        priority: "medium", status: "closed",      createdBy: daveId,   assigneeId: staffId, dayOffset: 50 },
+        { title: "Antivirus alert triggered",   category: "Security",       priority: "high",   status: "resolved",    createdBy: carolId2, assigneeId: staffId, dayOffset: 52 },
+        { title: "Cloud backup failing",        category: "Infrastructure", priority: "high",   status: "closed",      createdBy: daveId,   assigneeId: staffId, dayOffset: 55 },
+        // ── Month 3 (days 60–89) ─────────────────────────────────────────────
+        { title: "Laptop battery dying fast",   category: "Hardware",       priority: "medium", status: "resolved",    createdBy: carolId2, assigneeId: null,    dayOffset: 61 },
+        { title: "Cannot print to floor printer", category: "Hardware",     priority: "low",    status: "closed",      createdBy: daveId,   assigneeId: null,    dayOffset: 63 },
+        { title: "Email attachment too large",  category: "Software",       priority: "low",    status: "closed",      createdBy: carolId2, assigneeId: null,    dayOffset: 65 },
+        { title: "Network switch failure",      category: "Network",        priority: "urgent", status: "resolved",    createdBy: daveId,   assigneeId: staffId, dayOffset: 68 },
+        { title: "Admin rights request",        category: "Access",         priority: "medium", status: "closed",      createdBy: carolId2, assigneeId: staffId, dayOffset: 70 },
+        { title: "Ransomware detection",        category: "Security",       priority: "urgent", status: "resolved",    createdBy: daveId,   assigneeId: staffId, dayOffset: 72 },
+        { title: "Software license expired",    category: "Software",       priority: "high",   status: "closed",      createdBy: carolId2, assigneeId: staffId, dayOffset: 75 },
+        { title: "Database server overload",    category: "Infrastructure", priority: "urgent", status: "resolved",    createdBy: daveId,   assigneeId: staffId, dayOffset: 78 },
+        { title: "Headset not recognized",      category: "Hardware",       priority: "low",    status: "closed",      createdBy: carolId2, assigneeId: null,    dayOffset: 80 },
+        { title: "Zoom video not working",      category: "Software",       priority: "medium", status: "resolved",    createdBy: daveId,   assigneeId: null,    dayOffset: 83 },
+        // ── Month 4 (days 90–119) ────────────────────────────────────────────
+        { title: "New laptop provisioning",     category: "Hardware",       priority: "medium", status: "resolved",    createdBy: carolId2, assigneeId: staffId, dayOffset: 92 },
+        { title: "Firewall rule misconfigured", category: "Network",        priority: "high",   status: "closed",      createdBy: daveId,   assigneeId: staffId, dayOffset: 95 },
+        { title: "MFA enrollment issue",        category: "Access",         priority: "high",   status: "resolved",    createdBy: carolId2, assigneeId: staffId, dayOffset: 97 },
+        { title: "Critical patch deployment",   category: "Infrastructure", priority: "urgent", status: "closed",      createdBy: daveId,   assigneeId: staffId, dayOffset: 100 },
+        { title: "Adobe license needed",        category: "Software",       priority: "low",    status: "resolved",    createdBy: carolId2, assigneeId: null,    dayOffset: 103 },
+        { title: "Webcam not detected",         category: "Hardware",       priority: "low",    status: "closed",      createdBy: daveId,   assigneeId: null,    dayOffset: 106 },
+        { title: "Data breach investigation",   category: "Security",       priority: "urgent", status: "resolved",    createdBy: carolId2, assigneeId: staffId, dayOffset: 108 },
+        { title: "VLAN configuration change",   category: "Network",        priority: "medium", status: "closed",      createdBy: daveId,   assigneeId: staffId, dayOffset: 111 },
+        { title: "User offboarding request",    category: "Access",         priority: "medium", status: "resolved",    createdBy: carolId2, assigneeId: staffId, dayOffset: 113 },
+        { title: "Storage array alert",         category: "Infrastructure", priority: "high",   status: "closed",      createdBy: daveId,   assigneeId: staffId, dayOffset: 116 },
+        // ── Month 5 (days 120–149) ───────────────────────────────────────────
+        { title: "RAM upgrade request",         category: "Hardware",       priority: "low",    status: "in_progress", createdBy: carolId2, assigneeId: staffId, dayOffset: 122 },
+        { title: "Slack workspace sync error",  category: "Software",       priority: "medium", status: "resolved",    createdBy: daveId,   assigneeId: null,    dayOffset: 124 },
+        { title: "DNS resolution failure",      category: "Network",        priority: "high",   status: "in_progress", createdBy: carolId2, assigneeId: staffId, dayOffset: 127 },
+        { title: "Service account expired",     category: "Access",         priority: "high",   status: "resolved",    createdBy: daveId,   assigneeId: staffId, dayOffset: 129 },
+        { title: "SSL certificate expiring",    category: "Security",       priority: "urgent", status: "in_progress", createdBy: carolId2, assigneeId: staffId, dayOffset: 132 },
+        { title: "App server restart needed",   category: "Infrastructure", priority: "medium", status: "resolved",    createdBy: daveId,   assigneeId: staffId, dayOffset: 135 },
+        { title: "Keyboard shortcut issue",     category: "Software",       priority: "low",    status: "closed",      createdBy: carolId2, assigneeId: null,    dayOffset: 137 },
+        { title: "NIC card failure",            category: "Hardware",       priority: "high",   status: "in_progress", createdBy: daveId,   assigneeId: staffId, dayOffset: 140 },
+        { title: "Proxy settings broken",       category: "Network",        priority: "medium", status: "resolved",    createdBy: carolId2, assigneeId: null,    dayOffset: 142 },
+        { title: "Permission denied on share",  category: "Access",         priority: "medium", status: "closed",      createdBy: daveId,   assigneeId: null,    dayOffset: 145 },
+        // ── Month 6 / Recent (days 150–175) ─────────────────────────────────
+        { title: "Screen resolution reset",     category: "Hardware",       priority: "low",    status: "open",        createdBy: carolId2, assigneeId: null,    dayOffset: 151 },
+        { title: "Python env not found",        category: "Software",       priority: "medium", status: "open",        createdBy: daveId,   assigneeId: null,    dayOffset: 153 },
+        { title: "Network latency spike",       category: "Network",        priority: "high",   status: "in_progress", createdBy: carolId2, assigneeId: staffId, dayOffset: 156 },
+        { title: "Contractor access request",   category: "Access",         priority: "medium", status: "open",        createdBy: daveId,   assigneeId: null,    dayOffset: 158 },
+        { title: "Suspicious process detected", category: "Security",       priority: "urgent", status: "in_progress", createdBy: carolId2, assigneeId: staffId, dayOffset: 160 },
+        { title: "Backup job timed out",        category: "Infrastructure", priority: "high",   status: "open",        createdBy: daveId,   assigneeId: null,    dayOffset: 162 },
+        { title: "Mouse scroll not working",    category: "Hardware",       priority: "low",    status: "open",        createdBy: carolId2, assigneeId: null,    dayOffset: 164 },
+        { title: "App crashes on save",         category: "Software",       priority: "high",   status: "in_progress", createdBy: daveId,   assigneeId: staffId, dayOffset: 166 },
+        { title: "Switch port down",            category: "Network",        priority: "urgent", status: "open",        createdBy: carolId2, assigneeId: staffId, dayOffset: 168 },
+        { title: "Shared mailbox access lost",  category: "Access",         priority: "medium", status: "open",        createdBy: daveId,   assigneeId: null,    dayOffset: 170 },
+      ];
+
+      for (const t of TICKETS) {
+        const createdAt = d(SIX_MONTHS_AGO, t.dayOffset);
+        const isResolved = t.status === "resolved" || t.status === "closed";
+        const resHours = resolutionHours[t.category] ?? 12;
+        const updatedAt = isResolved ? d(SIX_MONTHS_AGO, t.dayOffset, resHours) : createdAt;
+
+        await sql`
+          INSERT INTO tickets (title, description, priority, category, status, created_by, assignee_id, created_at, updated_at)
+          VALUES (
+            ${t.title},
+            ${"Reported by user: " + t.title.toLowerCase() + ". Awaiting IT resolution."},
+            ${t.priority},
+            ${t.category},
+            ${t.status},
+            ${t.createdBy},
+            ${t.assigneeId ?? null},
+            ${createdAt},
+            ${updatedAt}
+          )
+        `;
+      }
+      console.log(`  seed  ${TICKETS.length} sample tickets`);
+    }
+  }
+
   // Assign LAP-001 to Carol User, create history row
   const carolId = insertedUsers["user@itms.local"];
   const lap001Id = insertedAssets["LAP-001"];
