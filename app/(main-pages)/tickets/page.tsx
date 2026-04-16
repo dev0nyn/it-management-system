@@ -315,6 +315,7 @@ export default function TicketsPage() {
   const dndId = useId();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -328,8 +329,9 @@ export default function TicketsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
 
-  async function loadTickets() {
-    setIsLoading(true);
+  async function loadTickets(silent = false) {
+    if (silent) setIsRefreshing(true);
+    else setIsLoading(true);
     try {
       const res = await authFetch(`${getApiBase()}/api/v1/tickets`);
       if (res.ok) {
@@ -340,6 +342,7 @@ export default function TicketsPage() {
       // silently fail
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   }
 
@@ -677,12 +680,12 @@ export default function TicketsPage() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={loadTickets}
-              disabled={isLoading}
+              onClick={() => loadTickets(true)}
+              disabled={isRefreshing}
               className="flex items-center justify-center h-9 w-9 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors shrink-0"
               title="Refresh"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
             </button>
 
             <Button

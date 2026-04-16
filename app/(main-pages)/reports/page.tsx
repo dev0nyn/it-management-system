@@ -20,7 +20,10 @@ import {
   Loader2,
   FileText,
   FileDown,
+  RefreshCw,
+  PackageOpen,
 } from "lucide-react";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 // Tailwind v4 safelist for dynamic Tremor color classes
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -108,6 +111,268 @@ function ExportMenu({ reportId, from, to }: { reportId: string; from: string; to
         <DropdownMenuItem onClick={() => handleExport("pdf")}>
           <FileDown className="h-3.5 w-3.5" />
           Download PDF
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+function triggerDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function buildAllCsv(
+  preset: Preset,
+  from: string,
+  to: string,
+  statusRows: { status: string; count: number }[],
+  resRows: { category: string; avgHours: number }[],
+  assetRows: { status: string; count: number }[],
+  activityRows: { name: string; created: number; resolved: number }[],
+) {
+  const section = (title: string, headers: string[], rows: string[][]) =>
+    [`## ${title}`, headers.join(","), ...rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(","))].join("\n");
+
+  const fmtStatus = (s: string) => s === "in_progress" ? "In Progress" : s.charAt(0).toUpperCase() + s.slice(1);
+
+  const parts = [
+    `# IT Management System — Analytics Report`,
+    `# Period: ${from} to ${to}  |  Preset: ${preset.label}`,
+    `# Generated: ${new Date().toLocaleString()}`,
+    "",
+    section("Tickets by Status",
+      ["Status", "Count"],
+      statusRows.map((r) => [fmtStatus(r.status), String(r.count)])),
+    "",
+    section("Resolution Time by Category",
+      ["Category", "Avg Resolution Time (hours)"],
+      resRows.map((r) => [r.category, r.avgHours.toFixed(1)])),
+    "",
+    section("Assets by Status",
+      ["Status", "Count"],
+      assetRows.map((r) => [fmtStatus(r.status), String(r.count)])),
+    "",
+    section("Staff Activity",
+      ["Name", "Tickets Created", "Tickets Resolved"],
+      activityRows.map((r) => [r.name, String(r.created), String(r.resolved)])),
+  ];
+
+  return "\uFEFF" + parts.join("\n");
+}
+
+async function buildAllPdf(
+  preset: Preset,
+  from: string,
+  to: string,
+  kpis: { label: string; value: string }[],
+  statusRows: { status: string; count: number }[],
+  resRows: { category: string; avgHours: number }[],
+  assetRows: { status: string; count: number }[],
+  activityRows: { name: string; created: number; resolved: number }[],
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const bold    = await doc.embedFont(StandardFonts.HelveticaBold);
+  const regular = await doc.embedFont(StandardFonts.Helvetica);
+
+  const W = 595, H = 842; // A4
+  const margin = 48;
+  const col = W - margin * 2;
+
+  // ── colour palette ──────────────────────────────────────────────────────────
+  const C = {
+    brand:   rgb(0.82, 0.13, 0.13),   // red-600
+    dark:    rgb(0.11, 0.11, 0.14),
+    muted:   rgb(0.45, 0.45, 0.52),
+    border:  rgb(0.88, 0.88, 0.92),
+    rowAlt:  rgb(0.97, 0.97, 0.99),
+    white:   rgb(1, 1, 1),
+    blue:    rgb(0.22, 0.48, 0.87),
+    green:   rgb(0.13, 0.68, 0.45),
+    amber:   rgb(0.85, 0.55, 0.10),
+    violet:  rgb(0.55, 0.22, 0.87),
+    indigo:  rgb(0.38, 0.35, 0.87),
+  };
+
+  let page = doc.addPage([W, H]);
+  let y = H - margin;
+
+  function newPage() {
+    page = doc.addPage([W, H]);
+    y = H - margin;
+  }
+
+  function ensureSpace(needed: number) {
+    if (y - needed < margin + 40) newPage();
+  }
+
+  // ── Cover header ────────────────────────────────────────────────────────────
+  // Red accent bar
+  page.drawRectangle({ x: 0, y: H - 6, width: W, height: 6, color: C.brand });
+
+  y -= 20;
+  page.drawText("IT Management System", { x: margin, y, font: bold, size: 22, color: C.brand });
+  y -= 28;
+  page.drawText("Analytics Report", { x: margin, y, font: bold, size: 16, color: C.dark });
+  y -= 18;
+  page.drawText(`Period: ${from}  →  ${to}  (${preset.label})`, { x: margin, y, font: regular, size: 9, color: C.muted });
+  y -= 13;
+  page.drawText(`Generated: ${new Date().toLocaleString()}`, { x: margin, y, font: regular, size: 9, color: C.muted });
+
+  // Divider
+  y -= 16;
+  page.drawLine({ start: { x: margin, y }, end: { x: W - margin, y }, thickness: 1, color: C.border });
+  y -= 20;
+
+  // ── KPI Summary row ─────────────────────────────────────────────────────────
+  page.drawText("SUMMARY", { x: margin, y, font: bold, size: 8, color: C.muted });
+  y -= 12;
+
+  const kpiW = col / 3;
+  kpis.forEach((k, i) => {
+    const kx = margin + (i % 3) * kpiW;
+    const ky = y - Math.floor(i / 3) * 42;
+    page.drawRectangle({ x: kx, y: ky - 30, width: kpiW - 8, height: 36, color: C.rowAlt, borderColor: C.border, borderWidth: 0.5 });
+    page.drawText(k.value, { x: kx + 8, y: ky - 10, font: bold, size: 14, color: C.dark });
+    page.drawText(k.label, { x: kx + 8, y: ky - 24, font: regular, size: 7.5, color: C.muted });
+  });
+  y -= Math.ceil(kpis.length / 3) * 42 + 16;
+
+  // Divider
+  page.drawLine({ start: { x: margin, y }, end: { x: W - margin, y }, thickness: 1, color: C.border });
+  y -= 24;
+
+  // ── Section helper ───────────────────────────────────────────────────────────
+  function drawSectionHeader(title: string, subtitle: string, color: ReturnType<typeof rgb>) {
+    ensureSpace(56);
+    page.drawRectangle({ x: margin - 4, y: y - 26, width: col + 8, height: 32, color: color });
+    page.drawText(title, { x: margin + 2, y: y - 10, font: bold, size: 11, color: C.white });
+    page.drawText(subtitle, { x: margin + 2, y: y - 21, font: regular, size: 7.5, color: rgb(1, 1, 1) });
+    y -= 36;
+  }
+
+  function drawTable(headers: string[], widths: number[], rows: string[][], colColors?: ReturnType<typeof rgb>[]) {
+    const rowH = 18;
+    const headerH = 20;
+
+    ensureSpace(headerH + rowH);
+    // Header row
+    page.drawRectangle({ x: margin, y: y - headerH + 4, width: col, height: headerH, color: C.dark });
+    let cx = margin + 6;
+    headers.forEach((h, i) => {
+      page.drawText(h.toUpperCase(), { x: cx, y: y - 11, font: bold, size: 7.5, color: C.white });
+      cx += widths[i];
+    });
+    y -= headerH + 2;
+
+    rows.forEach((row, ri) => {
+      ensureSpace(rowH + 4);
+      if (ri % 2 === 0) page.drawRectangle({ x: margin, y: y - rowH + 4, width: col, height: rowH, color: C.rowAlt });
+      page.drawLine({ start: { x: margin, y: y - rowH + 4 }, end: { x: W - margin, y: y - rowH + 4 }, thickness: 0.3, color: C.border });
+      let cx2 = margin + 6;
+      row.forEach((cell, ci) => {
+        const cellColor = (ri === 0 && colColors?.[ci]) ? colColors[ci] : C.dark;
+        page.drawText(String(cell).slice(0, 40), { x: cx2, y: y - 11, font: ci === 0 ? bold : regular, size: 8.5, color: cellColor });
+        cx2 += widths[ci];
+      });
+      y -= rowH;
+    });
+    y -= 12;
+  }
+
+  const fmtStatus = (s: string) => s === "in_progress" ? "In Progress" : s.charAt(0).toUpperCase() + s.slice(1);
+
+  // ── Section 1: Tickets by Status ─────────────────────────────────────────────
+  drawSectionHeader("Tickets by Status", `${statusRows.reduce((s, r) => s + r.count, 0)} total tickets in period`, C.blue);
+  const statusW = [col * 0.7, col * 0.3];
+  drawTable(["Status", "Count"], statusW,
+    statusRows.length ? statusRows.map((r) => [fmtStatus(r.status), String(r.count)]) : [["No data", "—"]]);
+
+  // ── Section 2: Resolution Time ───────────────────────────────────────────────
+  drawSectionHeader("Resolution Time by Category", "Average hours from open to resolved/closed", C.green);
+  const resW = [col * 0.65, col * 0.35];
+  drawTable(["Category", "Avg Hours"], resW,
+    resRows.length ? resRows.map((r) => [r.category, r.avgHours.toFixed(1) + " h"]) : [["No data", "—"]]);
+
+  // ── Section 3: Assets by Status ──────────────────────────────────────────────
+  drawSectionHeader("Assets by Status", `${assetRows.reduce((s, r) => s + r.count, 0)} total assets`, C.amber);
+  const assetW = [col * 0.7, col * 0.3];
+  drawTable(["Status", "Count"], assetW,
+    assetRows.length ? assetRows.map((r) => [fmtStatus(r.status), String(r.count)]) : [["No data", "—"]]);
+
+  // ── Section 4: Staff Activity ────────────────────────────────────────────────
+  drawSectionHeader("Staff Activity", "Tickets created vs resolved per user", C.violet);
+  const actW = [col * 0.55, col * 0.225, col * 0.225];
+  drawTable(["Name", "Created", "Resolved"], actW,
+    activityRows.filter((r) => r.created > 0 || r.resolved > 0).length
+      ? activityRows.filter((r) => r.created > 0 || r.resolved > 0).map((r) => [r.name, String(r.created), String(r.resolved)])
+      : [["No data", "—", "—"]]);
+
+  // ── Footer on every page ─────────────────────────────────────────────────────
+  const pages = doc.getPages();
+  pages.forEach((p, i) => {
+    p.drawLine({ start: { x: margin, y: margin - 4 }, end: { x: W - margin, y: margin - 4 }, thickness: 0.5, color: C.border });
+    p.drawText("IT Management System — Confidential", { x: margin, y: margin - 16, font: regular, size: 7, color: C.muted });
+    p.drawText(`Page ${i + 1} of ${pages.length}`, { x: W - margin - 50, y: margin - 16, font: regular, size: 7, color: C.muted });
+  });
+
+  return doc.save();
+}
+
+interface ExportAllMenuProps {
+  preset: Preset;
+  from: string;
+  to: string;
+  kpis: { label: string; value: string }[];
+  statusRows: { status: string; count: number }[];
+  resRows: { category: string; avgHours: number }[];
+  assetRows: { status: string; count: number }[];
+  activityRows: { name: string; created: number; resolved: number }[];
+  disabled: boolean;
+}
+
+function ExportAllMenu({ preset, from, to, kpis, statusRows, resRows, assetRows, activityRows, disabled }: ExportAllMenuProps) {
+  const [exporting, setExporting] = useState<"csv" | "pdf" | null>(null);
+
+  async function handleExport(format: "csv" | "pdf") {
+    if (exporting) return;
+    setExporting(format);
+    try {
+      const slug = `${from}-to-${to}`;
+      if (format === "csv") {
+        const csv = buildAllCsv(preset, from, to, statusRows, resRows, assetRows, activityRows);
+        triggerDownload(new Blob([csv], { type: "text/csv;charset=utf-8;" }), `it-report-${slug}.csv`);
+      } else {
+        const bytes = await buildAllPdf(preset, from, to, kpis, statusRows, resRows, assetRows, activityRows);
+        triggerDownload(new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" }), `it-report-${slug}.pdf`);
+      }
+    } finally {
+      setExporting(null);
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        disabled={disabled || !!exporting}
+        className="inline-flex items-center gap-2 rounded-xl h-10 px-4 text-sm font-medium border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none"
+      >
+        {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <PackageOpen className="h-4 w-4" />}
+        Export All
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[180px]">
+        <DropdownMenuItem onClick={() => handleExport("csv")}>
+          <FileText className="h-3.5 w-3.5 mr-2" />
+          Download CSV
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => handleExport("pdf")}>
+          <FileDown className="h-3.5 w-3.5 mr-2" />
+          Download PDF Report
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -228,13 +493,26 @@ export default function ReportsPage() {
           </DropdownMenu>
 
           <Button
-            className="bg-red-600 hover:bg-red-700 text-white shadow-md rounded-xl h-10 px-4 gap-2"
+            variant="outline"
+            className="rounded-xl h-10 gap-2 border-slate-200 dark:border-white/10"
             onClick={() => fetchReports(preset)}
             disabled={loading}
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            {loading ? "Loading…" : "Refresh"}
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            {loading ? "Refreshing…" : "Refresh"}
           </Button>
+
+          <ExportAllMenu
+            preset={preset}
+            from={dateRange.from}
+            to={dateRange.to}
+            kpis={kpis}
+            statusRows={statusRows}
+            resRows={resRows}
+            assetRows={assetRows}
+            activityRows={activityRows}
+            disabled={loading}
+          />
         </div>
       </div>
 

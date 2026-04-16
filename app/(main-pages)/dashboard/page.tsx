@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { MonitoringStatusWidget } from "@/components/monitoring/monitoring-status-widget";
 import { AreaChart, DonutChart } from '@tremor/react';
 import { authFetch, getApiBase } from "@/lib/api-client";
 import Link from "next/link";
+import { RefreshCw } from "lucide-react";
 
 // Tailwind v4 safelist for dynamic Tremor color classes
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -61,38 +62,42 @@ export default function DashboardPage() {
   const [assetRows, setAssetRows] = useState<AssetStatusRow[]>([]);
   const [deviceCounts, setDeviceCounts] = useState<{ up: number; total: number } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const base = getApiBase();
-        const [ticketRes, assetRes, deviceRes] = await Promise.all([
-          authFetch(`${base}/api/v1/tickets`),
-          authFetch(`${base}/api/v1/reports/assets-by-status`),
-          authFetch(`${base}/api/v1/devices`),
-        ]);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    else setRefreshing(true);
+    try {
+      const base = getApiBase();
+      const [ticketRes, assetRes, deviceRes] = await Promise.all([
+        authFetch(`${base}/api/v1/tickets`),
+        authFetch(`${base}/api/v1/reports/assets-by-status`),
+        authFetch(`${base}/api/v1/devices`),
+      ]);
 
-        if (ticketRes.ok) {
-          const { data } = await ticketRes.json();
-          setTickets(data ?? []);
-        }
-        if (assetRes.ok) {
-          const { data } = await assetRes.json();
-          setAssetRows((data?.rows ?? []) as AssetStatusRow[]);
-        }
-        if (deviceRes.ok) {
-          const { data: devices } = await deviceRes.json() as { data: DeviceRow[] };
-          setDeviceCounts({
-            up: devices.filter((d) => d.status === "up").length,
-            total: devices.length,
-          });
-        }
-      } finally {
-        setLoading(false);
+      if (ticketRes.ok) {
+        const { data } = await ticketRes.json();
+        setTickets(data ?? []);
       }
+      if (assetRes.ok) {
+        const { data } = await assetRes.json();
+        setAssetRows((data?.rows ?? []) as AssetStatusRow[]);
+      }
+      if (deviceRes.ok) {
+        const { data: devices } = await deviceRes.json() as { data: DeviceRow[] };
+        setDeviceCounts({
+          up: devices.filter((d) => d.status === "up").length,
+          total: devices.length,
+        });
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-    load();
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
 
   // ── Derived values ───────────────────────────────────────────────────────────
   const openCount      = tickets.filter((t) => t.status === "open").length;
@@ -159,10 +164,18 @@ export default function DashboardPage() {
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-800 dark:text-white mb-1">Dashboard</h2>
           <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400">Overview of your IT infrastructure and support.</p>
         </div>
-        <div className="flex items-center w-full sm:w-auto">
-          <Link
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => load(true)}
+            disabled={refreshing}
+            title="Refresh"
+            className="flex items-center justify-center h-9 w-9 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors shrink-0"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+          </button>
+<Link
             href="/reports"
-            className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-red-600 text-white hover:bg-red-700 h-10 py-2 px-4 hover:shadow-lg active:scale-95"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-red-600 text-white hover:bg-red-700 h-9 py-2 px-4 hover:shadow-lg active:scale-95"
           >
             View Reports
           </Link>
