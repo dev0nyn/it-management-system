@@ -1,7 +1,8 @@
 "use client";
 
 import React from 'react';
-import { AreaChart, DonutChart, BarChart } from '@tremor/react';
+import { MonitoringStatusWidget } from "@/components/monitoring/monitoring-status-widget";
+import { AreaChart, DonutChart } from '@tremor/react';
 
 // Tailwind v4 safelist for dynamic Tremor color classes
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -22,16 +23,6 @@ const assetData = [
   { name: 'Monitors', value: 280 },
   { name: 'Phones', value: 120 },
   { name: 'Peripherals', value: 180 },
-];
-
-const serverUptimeData = [
-  { time: '00:00', load: 35, latency: 12 },
-  { time: '04:00', load: 12, latency: 8 },
-  { time: '08:00', load: 65, latency: 25 },
-  { time: '12:00', load: 85, latency: 45 },
-  { time: '16:00', load: 70, latency: 30 },
-  { time: '20:00', load: 45, latency: 18 },
-  { time: '23:59', load: 30, latency: 15 },
 ];
 
 export default function DashboardPage() {
@@ -130,24 +121,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-7">
         <div className="lg:col-span-3">
-          <div className="relative rounded-2xl border bg-white dark:bg-slate-900 shadow-sm ring-1 ring-slate-200/50 dark:ring-slate-800 h-full flex flex-col">
-             <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
-                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Server Network Status</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Daily server load & latency monitoring</p>
-            </div>
-            <div className="p-4 sm:p-6 flex-1 w-full overflow-hidden">
-              <BarChart
-                className="h-64 sm:h-72 mt-2 sm:mt-4 w-full"
-                data={serverUptimeData}
-                index="time"
-                categories={['load', 'latency']}
-                colors={['violet', 'amber']}
-                yAxisWidth={40}
-                showAnimation={true}
-                showGridLines={true}
-              />
-            </div>
-          </div>
+          <MonitoringStatusWidget />
         </div>
 
         <div className="lg:col-span-4">

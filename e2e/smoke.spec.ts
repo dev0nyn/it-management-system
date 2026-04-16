@@ -25,7 +25,7 @@ test("smoke — full happy path", async ({ page }) => {
   await expect(page).toHaveURL(/\/tickets/);
 
   // 4. Open the ticket submission dialog
-  const newTicketBtn = page.getByRole("button", { name: "New Ticket" });
+  const newTicketBtn = page.getByRole("button", { name: "New Ticket" }).first();
   await expect(newTicketBtn).toBeVisible({ timeout: 10_000 });
   await newTicketBtn.click();
 
