@@ -20,6 +20,7 @@ const mockUser = {
   email: "alice@example.com",
   name: "Alice",
   role: "end_user" as const,
+  googleId: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
