@@ -1,4 +1,5 @@
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/guard";
@@ -16,5 +17,8 @@ export async function GET(req: NextRequest) {
   const items = await repo.getNotificationsForUser(session.id);
   const unreadCount = items.filter((n) => !n.read).length;
 
-  return NextResponse.json({ data: items, unreadCount });
+  return NextResponse.json(
+    { data: items, unreadCount },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }

@@ -76,7 +76,9 @@ export function NotificationBell() {
     let cancelled = false;
     async function load() {
       try {
-        const res = await authFetch(`${getApiBase()}/api/v1/notifications`);
+        const res = await authFetch(`${getApiBase()}/api/v1/notifications`, {
+          cache: "no-store",
+        });
         if (res.ok && !cancelled) {
           const { data } = await res.json();
           setItems(data ?? []);
@@ -87,9 +89,12 @@ export function NotificationBell() {
     }
     load();
     const interval = setInterval(load, 30000);
+    // Refresh immediately whenever a ticket action happens on this page
+    window.addEventListener("tickets:changed", load);
     return () => {
       cancelled = true;
       clearInterval(interval);
+      window.removeEventListener("tickets:changed", load);
     };
   }, []);
 
