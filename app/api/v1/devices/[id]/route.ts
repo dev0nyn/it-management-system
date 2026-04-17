@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireRole } from "@/lib/auth/guard";
+import { requireRole, requireAnyRole } from "@/lib/auth/guard";
 import * as service from "@/lib/monitoring/service";
 import { DeviceNotFoundError } from "@/lib/monitoring/service";
 import {
@@ -17,6 +17,29 @@ const updateSchema = z.object({
   type: z.enum(["server", "switch", "router", "firewall", "ap"]).optional(),
   checkIntervalSec: z.number().int().min(10).optional(),
 });
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = requireAnyRole(req, ["admin", "it_staff"]);
+  if ("error" in auth) return auth.error;
+
+  const { id } = await params;
+
+  try {
+    const device = await service.getDevice(id);
+    return NextResponse.json({ data: device });
+  } catch (err) {
+    if (err instanceof DeviceNotFoundError) {
+      return NextResponse.json(
+        { error: { code: "NOT_FOUND", message: "Device not found" } },
+        { status: 404 }
+      );
+    }
+    throw err;
+  }
+}
 
 export async function PATCH(
   req: NextRequest,
