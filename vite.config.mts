@@ -9,6 +9,6 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./setupTests.ts'],
     include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['node_modules', '.next', '.worktrees/**', '.claude/worktrees/**', 'apps/**', 'services/**', 'shared/**', 'e2e/**'],
+    exclude: ['node_modules', '.next', '.worktrees/**', '.claude/worktrees/**', 'apps/**', 'services/**', 'shared/**', 'e2e/**', 'docs/**'],
   },
 });
