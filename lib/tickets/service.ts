@@ -181,8 +181,35 @@ export async function updateTicket(id: string, input: UpdateTicketInput, actorId
   return updated;
 }
 
-export async function deleteTicket(id: string) {
+export async function deleteTicket(id: string, actorId?: string) {
   const existing = await repo.findById(id);
   if (!existing) throw new TicketNotFoundError(`Ticket ${id} not found`);
+
+  const actor = actorId ? await repo.findUserById(actorId) : null;
+  const actorName = actor?.name ?? "Someone";
+
   await repo.remove(id);
+
+  // Notify all admins and IT staff that a ticket was deleted
+  try {
+    const itStaff = await repo.findItStaffUsers();
+    const admins = await repo.findAdminUsers();
+    const recipients = [
+      ...itStaff,
+      ...admins.filter((a) => !itStaff.some((s) => s.id === a.id)),
+    ].filter((u) => u.id !== actorId);
+
+    await Promise.all(
+      recipients.map((u) =>
+        sendInApp(
+          u.id,
+          "Ticket deleted",
+          `"${existing.title}" was deleted by ${actorName}`,
+          `/tickets`
+        )
+      )
+    );
+  } catch (err) {
+    console.error("[tickets] delete notification failed:", err);
+  }
 }
