@@ -119,6 +119,14 @@ function ExportMenu({ reportId, from, to }: { reportId: string; from: string; to
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
+/** Strip characters outside WinAnsi range — pdf-lib standard fonts require this */
+function safe(text: string): string {
+  return String(text)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")   // remove combining diacritics (é→e)
+    .replace(/[^\x20-\x7E]/g, "?");    // replace anything else with ?
+}
+
 function triggerDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -219,9 +227,9 @@ async function buildAllPdf(
   y -= 28;
   page.drawText("Analytics Report", { x: margin, y, font: bold, size: 16, color: C.dark });
   y -= 18;
-  page.drawText(`Period: ${from}  →  ${to}  (${preset.label})`, { x: margin, y, font: regular, size: 9, color: C.muted });
+  page.drawText(safe(`Period: ${from}  to  ${to}  (${preset.label})`), { x: margin, y, font: regular, size: 9, color: C.muted });
   y -= 13;
-  page.drawText(`Generated: ${new Date().toLocaleString()}`, { x: margin, y, font: regular, size: 9, color: C.muted });
+  page.drawText(safe(`Generated: ${new Date().toLocaleString()}`), { x: margin, y, font: regular, size: 9, color: C.muted });
 
   // Divider
   y -= 16;
@@ -473,7 +481,7 @@ export default function ReportsPage() {
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-800 dark:text-white">Reports</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Analytics and insights for IT operations</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 rounded-xl h-10 px-3 text-sm border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors focus:outline-none">
               <Calendar className="h-4 w-4" />

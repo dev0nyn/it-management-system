@@ -485,7 +485,7 @@ export function TicketDetailSheet({ ticket, open, onOpenChange, onUpdated, onDel
 
             {/* Edit form fields */}
             {isEditing && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 pb-5">
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3 pt-1 pb-5">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                     Status
