@@ -266,7 +266,7 @@ export default function MonitoringPage() {
 
                         <button
                           onClick={() => handleDelete(device.id)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                          className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
                           aria-label={`Delete ${device.name}`}
                         >
                           <Trash2 className="h-4 w-4" />

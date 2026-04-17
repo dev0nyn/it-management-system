@@ -90,7 +90,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { id } = await params;
 
   try {
-    await service.deleteTicket(id);
+    await service.deleteTicket(id, auth.session.id);
     return new NextResponse(null, { status: 204 });
   } catch (err) {
     if (err instanceof service.TicketNotFoundError) {

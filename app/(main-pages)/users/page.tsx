@@ -24,6 +24,8 @@ import {
   Calendar,
   Pencil,
   Trash2,
+  RefreshCw,
+  Download,
 } from "lucide-react";
 import { ApiUser, UserFormSheet } from "@/components/users/user-form-sheet";
 
@@ -105,6 +107,29 @@ export default function UsersPage() {
     setRefetchTrigger((n) => n + 1);
   }
 
+  async function exportCsv() {
+    const all: ApiUser[] = [];
+    let p = 1;
+    while (true) {
+      const res = await authFetch(`/api/v1/users?page=${p}`);
+      if (!res.ok) break;
+      const { data: batch } = await res.json() as { data: ApiUser[] };
+      if (!batch?.length) break;
+      all.push(...batch);
+      if (batch.length < 20) break;
+      p++;
+    }
+    const rows = [
+      ["Name", "Email", "Role", "Created At"],
+      ...all.map((u) => [u.name, u.email, u.role, new Date(u.createdAt).toLocaleDateString()]),
+    ];
+    const csv = "\uFEFF" + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = `users-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function openCreateSheet() {
     setSheetMode("create");
     setEditTarget(undefined);
@@ -177,13 +202,31 @@ export default function UsersPage() {
             Manage user accounts and permissions
           </p>
         </div>
-        <Button
-          onClick={openCreateSheet}
-          className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transition-all rounded-xl h-10 px-4"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add User
-        </Button>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
+            onClick={triggerRefetch}
+            disabled={isLoading}
+            title="Refresh"
+            className="flex items-center justify-center h-9 w-9 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors shrink-0"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+          </button>
+          <button
+            onClick={exportCsv}
+            title="Export CSV"
+            className="flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors text-xs font-medium shrink-0"
+          >
+            <Download className="h-4 w-4" />
+            Export
+          </button>
+          <Button
+            onClick={openCreateSheet}
+            className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transition-all rounded-xl h-9 px-4"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add User
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}

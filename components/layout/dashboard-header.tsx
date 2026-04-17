@@ -1,12 +1,11 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { NotificationBell } from "@/components/layout/notification-bell";
 
 interface DashboardHeaderProps {
   title?: string;
@@ -32,13 +31,7 @@ export function DashboardHeader({ title }: DashboardHeaderProps) {
           />
         </div>
 
-        <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg">
-          <Bell className="h-4 w-4" />
-          <Badge className="absolute -right-0.5 -top-0.5 h-4 min-w-4 rounded-full px-1 text-[10px] font-bold">
-            3
-          </Badge>
-          <span className="sr-only">Notifications</span>
-        </Button>
+        <NotificationBell />
 
         <ThemeToggle />
       </div>

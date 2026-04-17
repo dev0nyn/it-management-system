@@ -68,13 +68,16 @@ export async function remove(id: string) {
 
 export async function findItStaffUsers() {
   return db
-    .select({
-      id: users.id,
-      email: users.email,
-      name: users.name,
-    })
+    .select({ id: users.id, email: users.email, name: users.name })
     .from(users)
     .where(eq(users.role, "it_staff"));
+}
+
+export async function findAdminUsers() {
+  return db
+    .select({ id: users.id, email: users.email, name: users.name })
+    .from(users)
+    .where(eq(users.role, "admin"));
 }
 
 export async function findUserById(id: string) {

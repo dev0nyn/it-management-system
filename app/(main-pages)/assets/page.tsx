@@ -37,6 +37,8 @@ import {
   UserMinus,
   History,
   X,
+  RefreshCw,
+  Download,
 } from "lucide-react";
 import { authFetch, getApiBase, getSessionUser } from "@/lib/api-client";
 
@@ -326,6 +328,23 @@ export default function AssetsPage() {
     }
   };
 
+  function exportCsv() {
+    const rows = [
+      ["Tag", "Name", "Type", "Serial", "Status", "Assigned To", "Purchase Date", "Warranty Expiry"],
+      ...assets.map((a) => [
+        a.tag, a.name, a.type, a.serial, a.status,
+        a.assignedToName ?? "",
+        a.purchaseDate ? new Date(a.purchaseDate).toLocaleDateString() : "",
+        a.warrantyExpiry ? new Date(a.warrantyExpiry).toLocaleDateString() : "",
+      ]),
+    ];
+    const csv = "\uFEFF" + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = `assets-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const statusCounts = {
     total: assets.length,
     in_stock: assets.filter((a) => a.status === "in_stock").length,
@@ -342,12 +361,31 @@ export default function AssetsPage() {
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-800 dark:text-white">Assets</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Track and manage IT hardware inventory</p>
         </div>
-        {canMutate && (
-          <Button onClick={openCreate} className="bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transition-all rounded-xl h-10 px-4">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Asset
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchAssets}
+            disabled={loading}
+            title="Refresh"
+            className="flex items-center justify-center h-9 w-9 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors shrink-0"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </button>
+          <button
+            onClick={exportCsv}
+            disabled={assets.length === 0}
+            title="Export CSV"
+            className="flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-700 disabled:opacity-40 transition-colors text-xs font-medium shrink-0"
+          >
+            <Download className="h-4 w-4" />
+            Export
+          </button>
+          {canMutate && (
+            <Button onClick={openCreate} className="bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transition-all rounded-xl h-9 px-4">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Asset
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -439,9 +477,10 @@ export default function AssetsPage() {
                       <p className="text-xs text-slate-400 dark:text-slate-500 capitalize">{asset.type}</p>
                     </div>
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-1.5">
+                    <span className="lg:hidden text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 shrink-0">Serial:</span>
                     <span className="text-xs font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate">
-                      <Tag className="h-3 w-3 shrink-0" />
+                      <Tag className="h-3 w-3 shrink-0 lg:block hidden" />
                       {asset.serial.slice(-8)}
                     </span>
                   </div>
@@ -458,7 +497,8 @@ export default function AssetsPage() {
                       <span className="text-sm text-slate-400 italic">Unassigned</span>
                     )}
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-1.5">
+                    <span className="lg:hidden text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 shrink-0">Warranty:</span>
                     <span className="text-xs text-slate-500 dark:text-slate-400">
                       {asset.warrantyExpiry
                         ? new Date(asset.warrantyExpiry).toLocaleDateString("en-US", { month: "short", year: "numeric" })
@@ -466,7 +506,7 @@ export default function AssetsPage() {
                     </span>
                   </div>
                   {canMutate && (
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => openEdit(asset)}
                         title="Edit"
