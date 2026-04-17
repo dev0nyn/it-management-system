@@ -131,6 +131,16 @@ const EVENT_STYLE: Record<string, { dot: string; text: string; line: string }> =
     text: "text-slate-600 dark:text-slate-400",
     line: "border-slate-200 dark:border-zinc-700",
   },
+  title_changed: {
+    dot: "bg-sky-500 ring-4 ring-sky-100 dark:ring-sky-500/20",
+    text: "text-sky-700 dark:text-sky-400",
+    line: "border-sky-200 dark:border-sky-500/30",
+  },
+  description_changed: {
+    dot: "bg-teal-500 ring-4 ring-teal-100 dark:ring-teal-500/20",
+    text: "text-teal-700 dark:text-teal-400",
+    line: "border-teal-200 dark:border-teal-500/30",
+  },
 };
 
 function getEventStyle(eventType: string) {
@@ -256,6 +266,10 @@ function EventLabel({ event }: { event: TicketEvent }) {
       );
     case "updated":
       return <span>Details updated</span>;
+    case "title_changed":
+      return <span>Title updated</span>;
+    case "description_changed":
+      return <span>Description updated</span>;
     default:
       return <span>{cap(event.eventType.replace(/_/g, " "))}</span>;
   }
@@ -455,9 +469,18 @@ export function TicketDetailSheet({ ticket, open, onOpenChange, onUpdated, onDel
               <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
                 Description
               </p>
-              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-                {ticket.description}
-              </p>
+              {isEditing ? (
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  rows={5}
+                  className="w-full rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500/30 transition-colors resize-none"
+                />
+              ) : (
+                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                  {ticket.description}
+                </p>
+              )}
             </div>
 
             {/* Edit form fields */}
