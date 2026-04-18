@@ -210,6 +210,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* ── Management Section ── */}
+        {visibleManagementNav.length > 0 && (
         <SidebarGroup>
           <SidebarGroupLabel className="px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
             Management
@@ -247,8 +248,10 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        )}
 
         {/* ── System Section ── */}
+        {visibleSystemNav.length > 0 && (
         <SidebarGroup>
           <SidebarGroupLabel className="px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
             System
@@ -286,6 +289,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        )}
 
         {/* ── Quick Actions Card ── */}
         <div className="mt-auto px-3 pb-2 group-data-[collapsible=icon]:hidden">
