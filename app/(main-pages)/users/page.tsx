@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -455,63 +462,47 @@ export default function UsersPage() {
         onSuccess={triggerRefetch}
       />
 
-      {/* Delete Confirmation Overlay */}
-      {deleteTarget && (
-        <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 px-4 pb-4 sm:pb-0"
-          onClick={(e) =>
-            e.target === e.currentTarget &&
-            !isDeleting &&
-            (setDeleteTarget(null), setDeleteError(null))
-          }
-        >
-          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-zinc-900 shadow-xl p-6 ring-1 ring-slate-200/60 dark:ring-white/10">
-            <div className="flex items-start gap-3">
-              <div className="h-9 w-9 rounded-xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center shrink-0">
-                <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-base font-semibold text-slate-800 dark:text-white">
-                  Delete User?
-                </h3>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  This will permanently delete{" "}
-                  <span className="font-medium text-slate-700 dark:text-slate-300">
-                    {deleteTarget.name}
-                  </span>
-                  . This action cannot be undone.
-                </p>
-              </div>
-            </div>
-            {deleteError && (
-              <p className="mt-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl px-3 py-2">
-                {deleteError}
-              </p>
-            )}
-            <div className="mt-5 flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1 rounded-xl"
-                disabled={isDeleting}
-                onClick={() => {
-                  setDeleteTarget(null);
-                  setDeleteError(null);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl"
-                disabled={isDeleting}
-                onClick={handleDelete}
-                data-testid="confirm-delete-btn"
-              >
-                {isDeleting ? "Deleting..." : "Delete"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delete Confirmation */}
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open && !isDeleting) { setDeleteTarget(null); setDeleteError(null); } }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete User?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-slate-500 dark:text-slate-400 py-1">
+            This will permanently delete{" "}
+            <span className="font-medium text-slate-700 dark:text-slate-300">
+              {deleteTarget?.name}
+            </span>
+            . This action cannot be undone.
+          </p>
+          {deleteError && (
+            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl px-3 py-2">
+              {deleteError}
+            </p>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              disabled={isDeleting}
+              onClick={() => { setDeleteTarget(null); setDeleteError(null); }}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white rounded-xl"
+              disabled={isDeleting}
+              onClick={handleDelete}
+              data-testid="confirm-delete-btn"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -13,6 +13,13 @@ import {
 } from "@/components/ui/sheet";
 import { authFetch, getApiBase } from "@/lib/api-client";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const PRIORITIES = [
   { value: "low", label: "Low" },
@@ -181,19 +188,16 @@ export function TicketSubmitSheet({ open, onOpenChange, onSuccess }: Props) {
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Priority
               </label>
-              <select
-                value={form.priority}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, priority: e.target.value as Priority }))
-                }
-                className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 dark:focus:border-red-500/50 transition-colors"
-              >
-                {PRIORITIES.map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
+              <Select value={form.priority} onValueChange={(v: string | null) => { if (v) setForm((f) => ({ ...f, priority: v as Priority })); }}>
+                <SelectTrigger className="w-full rounded-xl border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRIORITIES.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Category */}
@@ -201,19 +205,16 @@ export function TicketSubmitSheet({ open, onOpenChange, onSuccess }: Props) {
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Category
               </label>
-              <select
-                value={form.category}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, category: e.target.value }))
-                }
-                className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 dark:focus:border-red-500/50 transition-colors"
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+              <Select value={form.category} onValueChange={(v: string | null) => { if (v) setForm((f) => ({ ...f, category: v })); }}>
+                <SelectTrigger className="w-full rounded-xl border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Error */}

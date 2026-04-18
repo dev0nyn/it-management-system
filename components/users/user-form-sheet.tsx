@@ -5,6 +5,13 @@ import { authFetch } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -176,15 +183,16 @@ export function UserFormSheet({
             <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
               Role <span className="text-red-500">*</span>
             </label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as Role)}
-              className="h-10 w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 px-3 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/30 transition-colors"
-            >
-              <option value="end_user">End User</option>
-              <option value="it_staff">IT Staff</option>
-              <option value="admin">Admin</option>
-            </select>
+            <Select value={role} onValueChange={(v: string | null) => { if (v) setRole(v as Role); }}>
+              <SelectTrigger className="h-10 w-full rounded-xl border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="end_user">End User</SelectItem>
+                <SelectItem value="it_staff">IT Staff</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {error && (

@@ -47,6 +47,41 @@ vi.mock("@/components/ui/sheet", () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// Mock @/components/ui/select
+// base-ui Select doesn't render item labels in jsdom when the popup is closed.
+// Replace with a native <select> so toHaveValue assertions work correctly.
+// ---------------------------------------------------------------------------
+vi.mock("@/components/ui/select", () => ({
+  Select: ({
+    value,
+    onValueChange,
+    children,
+  }: {
+    value?: string;
+    onValueChange?: (v: string | null) => void;
+    children: React.ReactNode;
+  }) => (
+    <select
+      role="combobox"
+      value={value ?? ""}
+      onChange={(e) => onValueChange?.(e.target.value)}
+    >
+      {children}
+    </select>
+  ),
+  SelectTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  SelectValue: () => null,
+  SelectContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  SelectItem: ({
+    value,
+    children,
+  }: {
+    value: string;
+    children: React.ReactNode;
+  }) => <option value={value}>{children}</option>,
+}));
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -102,7 +137,7 @@ describe("UserFormSheet field rendering", () => {
     expect(screen.getByPlaceholderText("Full name")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("user@example.com")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Min. 8 characters")).toBeInTheDocument();
-    // <select> role is "combobox"; its .value property is "end_user"
+    // Select is mocked as a native <select>; check its .value
     expect(screen.getByRole("combobox")).toHaveValue("end_user");
   });
 

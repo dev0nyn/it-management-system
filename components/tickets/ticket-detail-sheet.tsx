@@ -10,6 +10,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -490,61 +497,65 @@ export function TicketDetailSheet({ ticket, open, onOpenChange, onUpdated, onDel
                   <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                     Status
                   </label>
-                  <select
-                    value={form.status}
-                    onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as TicketStatus }))}
-                    className="rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500/30 transition-colors"
-                  >
-                    {STATUSES.map((s) => (
-                      <option key={s.value} value={s.value}>{s.label}</option>
-                    ))}
-                  </select>
+                  <Select value={form.status} onValueChange={(v: string | null) => { if (v) setForm((f) => ({ ...f, status: v as TicketStatus })); }}>
+                    <SelectTrigger className="rounded-lg border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-sm h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUSES.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                     Priority
                   </label>
-                  <select
-                    value={form.priority}
-                    onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value as TicketPriority }))}
-                    className="rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500/30 transition-colors"
-                  >
-                    {PRIORITIES.map((p) => (
-                      <option key={p.value} value={p.value}>{p.label}</option>
-                    ))}
-                  </select>
+                  <Select value={form.priority} onValueChange={(v: string | null) => { if (v) setForm((f) => ({ ...f, priority: v as TicketPriority })); }}>
+                    <SelectTrigger className="rounded-lg border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-sm h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PRIORITIES.map((p) => (
+                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                     Category
                   </label>
-                  <select
-                    value={form.category}
-                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                    className="rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500/30 transition-colors"
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
+                  <Select value={form.category} onValueChange={(v: string | null) => { if (v) setForm((f) => ({ ...f, category: v })); }}>
+                    <SelectTrigger className="rounded-lg border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-sm h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                     Assignee
                   </label>
-                  <select
-                    value={form.assigneeId ?? ""}
-                    onChange={(e) => setForm((f) => ({ ...f, assigneeId: e.target.value || null }))}
-                    className="rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500/30 transition-colors"
-                  >
-                    <option value="">Unassigned</option>
-                    {assignees.map((a) => (
-                      <option key={a.id} value={a.id}>{a.name}</option>
-                    ))}
-                  </select>
+                  <Select value={form.assigneeId ?? "__unassigned__"} onValueChange={(v: string | null) => setForm((f) => ({ ...f, assigneeId: v && v !== "__unassigned__" ? v : null }))}>
+                    <SelectTrigger className="rounded-lg border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-sm h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__unassigned__">Unassigned</SelectItem>
+                      {assignees.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             )}
