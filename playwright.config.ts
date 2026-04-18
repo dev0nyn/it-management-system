@@ -25,6 +25,16 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      testIgnore: ["**/demo.spec.ts"],
+    },
+    {
+      name: "demo",
+      use: {
+        ...devices["Desktop Chrome"],
+        video: "on",
+        launchOptions: { slowMo: 500 },
+      },
+      testMatch: ["**/demo.spec.ts"],
     },
   ],
   // Do not start a dev server — tests assume dev stack is already running
