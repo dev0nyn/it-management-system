@@ -1,0 +1,28 @@
+# Jira ↔ CoDev field mapping
+# Edit this file to customize how fields translate between systems.
+# Each section maps in both directions.
+
+status:
+  jira_to_codev:
+    "To Do": "open"
+    "In Progress": "in_progress"
+    "Done": "closed"
+    "Closed": "closed"
+  codev_to_jira:
+    "open": "To Do"
+    "in_progress": "In Progress"
+    "resolved": "Done"
+    "closed": "Done"
+
+priority:
+  jira_to_codev:
+    "Highest": "urgent"
+    "High": "high"
+    "Medium": "medium"
+    "Low": "low"
+    "Lowest": "low"
+  codev_to_jira:
+    "urgent": "Highest"
+    "high": "High"
+    "medium": "Medium"
+    "low": "Low"

@@ -25,8 +25,8 @@ test.describe("Navigation — admin role", () => {
     await expect(page.getByRole("link", { name: /Users/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /Assets/i })).toBeVisible();
     // System nav
-    await expect(page.getByRole("link", { name: /Reports/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Monitoring/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Reports/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /Monitoring/i }).first()).toBeVisible();
   });
 
   test("clicking Dashboard navigates to /dashboard", async ({ page }) => {

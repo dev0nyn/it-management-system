@@ -22,6 +22,8 @@ const mockTicket: Ticket = {
   status: "open",
   createdBy: "user-1",
   assigneeId: null,
+  jiraIssueKey: null,
+  jiraSyncedAt: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };

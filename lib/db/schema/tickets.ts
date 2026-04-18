@@ -27,6 +27,8 @@ export const tickets = pgTable("tickets", {
     .notNull()
     .references(() => users.id),
   assigneeId: uuid("assignee_id").references(() => users.id),
+  jiraIssueKey: text("jira_issue_key").unique(),
+  jiraSyncedAt: timestamp("jira_synced_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

@@ -45,9 +45,10 @@ test.describe("Ticket notifications — in-app", () => {
     await page.getByText("Ticket submitted!").waitFor({ timeout: 15_000 });
 
     // Verify via API that IT staff received a notification
-    const adminToken = await getAdminToken(request);
+    // Notifications are per-user — query as IT staff, not admin
+    const staffToken = await getStaffToken(request);
     const notifRes = await request.get(`${BASE}/api/v1/notifications`, {
-      headers: { Authorization: `Bearer ${adminToken}` },
+      headers: { Authorization: `Bearer ${staffToken}` },
     });
 
     // If notifications endpoint exists, verify content
@@ -124,6 +125,16 @@ async function getAdminToken(
 ): Promise<string> {
   const res = await request.post(`${BASE}/api/auth/login`, {
     data: { email: "admin@itms.local", password: "Admin1234!" },
+  });
+  const body = await res.json();
+  return body.token;
+}
+
+async function getStaffToken(
+  request: import("@playwright/test").APIRequestContext
+): Promise<string> {
+  const res = await request.post(`${BASE}/api/auth/login`, {
+    data: { email: "staff@itms.local", password: "Staff1234!" },
   });
   const body = await res.json();
   return body.token;
