@@ -131,7 +131,13 @@ export default function AssetsPage() {
   const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
   const [assignHistory, setAssignHistory] = useState<AssignmentHistory[]>([]);
   const [assignLoading, setAssignLoading] = useState(false);
+  const [assignError, setAssignError] = useState("");
+  const [reassignPending, setReassignPending] = useState(false);
   const userSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Unassign / delete error state
+  const [unassignTarget, setUnassignTarget] = useState<Asset | null>(null);
+  const [deleteError, setDeleteError] = useState("");
 
   const session = getSessionUser();
   const canMutate = session?.role === "admin" || session?.role === "it_staff";
@@ -197,51 +203,52 @@ export default function AssetsPage() {
     }
   };
 
-  const handleAssign = async () => {
+  const handleAssign = async (force = false) => {
     if (!assignAsset || !selectedUser) return;
     setSaving(true);
+    setAssignError("");
     try {
       const res = await authFetch(`${base}/api/v1/assets/${assignAsset.id}/assign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: selectedUser.id }),
+        body: JSON.stringify({ userId: selectedUser.id, ...(force && { force: true }) }),
       });
       if (!res.ok) {
         const err = await res.json();
-        if (err.error?.code === "ALREADY_ASSIGNED") {
-          const force = window.confirm(
-            `This asset is already assigned to ${assignAsset.assignedToName}. Reassign to ${selectedUser.name}?`
-          );
-          if (force) {
-            const r2 = await authFetch(`${base}/api/v1/assets/${assignAsset.id}/assign`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ userId: selectedUser.id, force: true }),
-            });
-            if (!r2.ok) throw new Error("Failed to reassign");
-          } else {
-            return;
-          }
-        } else {
-          throw new Error("Failed to assign");
+        if (err.error?.code === "ALREADY_ASSIGNED" && !force) {
+          setReassignPending(true);
+          return;
         }
+        setAssignError("Failed to assign asset.");
+        return;
       }
       setAssignAsset(null);
+      setReassignPending(false);
       fetchAssets();
     } catch {
-      alert("Failed to assign asset.");
+      setAssignError("Failed to assign asset.");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleUnassign = async (asset: Asset) => {
-    if (!confirm(`Unassign ${asset.name} from ${asset.assignedToName}?`)) return;
+  const handleUnassign = (asset: Asset) => {
+    setUnassignTarget(asset);
+  };
+
+  const confirmUnassign = async () => {
+    if (!unassignTarget) return;
+    setSaving(true);
     try {
-      const res = await authFetch(`${base}/api/v1/assets/${asset.id}/unassign`, { method: "POST" });
-      if (res.ok) fetchAssets();
-    } catch {
-      alert("Failed to unassign asset.");
+      const res = await authFetch(`${base}/api/v1/assets/${unassignTarget.id}/unassign`, { method: "POST" });
+      if (res.ok) {
+        setUnassignTarget(null);
+        fetchAssets();
+      } else {
+        setUnassignTarget(null);
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -315,13 +322,14 @@ export default function AssetsPage() {
   const handleDelete = async () => {
     if (!deleteAsset) return;
     setSaving(true);
+    setDeleteError("");
     try {
       const res = await authFetch(`${base}/api/v1/assets/${deleteAsset.id}`, { method: "DELETE" });
       if (res.ok || res.status === 204) {
         setDeleteAsset(null);
         fetchAssets();
       } else {
-        alert("Failed to delete asset.");
+        setDeleteError("Failed to delete asset. Please try again.");
       }
     } finally {
       setSaving(false);
@@ -667,7 +675,7 @@ export default function AssetsPage() {
       </Dialog>
 
       {/* Assign Dialog */}
-      <Dialog open={!!assignAsset} onOpenChange={(open: boolean) => { if (!open) setAssignAsset(null); }}>
+      <Dialog open={!!assignAsset} onOpenChange={(open: boolean) => { if (!open) { setAssignAsset(null); setReassignPending(false); setAssignError(""); } }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Assign Asset — {assignAsset?.name}</DialogTitle>
@@ -749,17 +757,49 @@ export default function AssetsPage() {
               )}
             </div>
           </div>
+          {reassignPending && (
+            <div className="rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+              This asset is currently assigned to <strong>{assignAsset?.assignedToName}</strong>. Confirm to reassign it to <strong>{selectedUser?.name}</strong>.
+            </div>
+          )}
+          {assignError && (
+            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl px-3 py-2">{assignError}</p>
+          )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAssignAsset(null)}>Close</Button>
-            <Button onClick={handleAssign} disabled={!selectedUser || saving} className="bg-red-600 hover:bg-red-700 text-white">
-              {saving ? "Assigning…" : "Assign"}
+            <Button variant="outline" onClick={() => { setAssignAsset(null); setReassignPending(false); setAssignError(""); }}>Close</Button>
+            {reassignPending ? (
+              <Button onClick={() => handleAssign(true)} disabled={saving} className="bg-amber-600 hover:bg-amber-700 text-white">
+                {saving ? "Reassigning…" : "Confirm Reassign"}
+              </Button>
+            ) : (
+              <Button onClick={() => handleAssign(false)} disabled={!selectedUser || saving} className="bg-red-600 hover:bg-red-700 text-white">
+                {saving ? "Assigning…" : "Assign"}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unassign Confirmation */}
+      <Dialog open={!!unassignTarget} onOpenChange={(open: boolean) => { if (!open) setUnassignTarget(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Unassign Asset</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-slate-600 dark:text-slate-300 py-2">
+            Unassign <strong>{unassignTarget?.name}</strong> from <strong>{unassignTarget?.assignedToName}</strong>? The asset will return to stock.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUnassignTarget(null)}>Cancel</Button>
+            <Button onClick={confirmUnassign} disabled={saving} className="bg-red-600 hover:bg-red-700 text-white">
+              {saving ? "Unassigning…" : "Unassign"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation */}
-      <Dialog open={!!deleteAsset} onOpenChange={(open: boolean) => { if (!open) setDeleteAsset(null); }}>
+      <Dialog open={!!deleteAsset} onOpenChange={(open: boolean) => { if (!open) { setDeleteAsset(null); setDeleteError(""); } }}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Delete Asset</DialogTitle>
@@ -767,8 +807,11 @@ export default function AssetsPage() {
           <p className="text-sm text-slate-600 dark:text-slate-300 py-2">
             Are you sure you want to delete <strong>{deleteAsset?.name}</strong> ({deleteAsset?.tag})? This action cannot be undone.
           </p>
+          {deleteError && (
+            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl px-3 py-2">{deleteError}</p>
+          )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteAsset(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => { setDeleteAsset(null); setDeleteError(""); }}>Cancel</Button>
             <Button onClick={handleDelete} disabled={saving} className="bg-red-600 hover:bg-red-700 text-white">
               {saving ? "Deleting…" : "Delete"}
             </Button>

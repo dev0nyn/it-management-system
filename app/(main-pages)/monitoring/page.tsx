@@ -5,6 +5,13 @@ import { authFetch } from "@/lib/api-client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Activity,
   Server,
   Wifi,
@@ -64,6 +71,8 @@ export default function MonitoringPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Device | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -98,11 +107,14 @@ export default function MonitoringPage() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this device?")) return;
-    await authFetch(`/api/v1/devices/${id}`, { method: "DELETE" });
-    setDevices((prev) => prev.filter((d) => d.id !== id));
-    setAlerts((prev) => prev.filter((a) => a.deviceId !== id));
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    await authFetch(`/api/v1/devices/${deleteTarget.id}`, { method: "DELETE" });
+    setDevices((prev) => prev.filter((d) => d.id !== deleteTarget.id));
+    setAlerts((prev) => prev.filter((a) => a.deviceId !== deleteTarget.id));
+    setDeleteTarget(null);
+    setDeleting(false);
   }
 
   const upCount = devices.filter((d) => d.status === "up").length;
@@ -265,7 +277,7 @@ export default function MonitoringPage() {
                         </div>
 
                         <button
-                          onClick={() => handleDelete(device.id)}
+                          onClick={() => setDeleteTarget(device)}
                           className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
                           aria-label={`Delete ${device.name}`}
                         >
@@ -330,6 +342,24 @@ export default function MonitoringPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Device</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-slate-600 dark:text-slate-300 py-2">
+            Delete <strong>{deleteTarget?.name}</strong> ({deleteTarget?.host})? This will also remove all associated alerts.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button onClick={confirmDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700 text-white">
+              {deleting ? "Deleting…" : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
