@@ -190,7 +190,7 @@ export function TicketSubmitSheet({ open, onOpenChange, onSuccess }: Props) {
               </label>
               <Select value={form.priority} onValueChange={(v: string | null) => { if (v) setForm((f) => ({ ...f, priority: v as Priority })); }}>
                 <SelectTrigger className="w-full rounded-xl border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 h-10">
-                  <SelectValue />
+                  <span className="truncate">{PRIORITIES.find(p => p.value === form.priority)?.label ?? form.priority}</span>
                 </SelectTrigger>
                 <SelectContent>
                   {PRIORITIES.map((p) => (

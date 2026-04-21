@@ -317,6 +317,11 @@ export function TicketDetailSheet({ ticket, open, onOpenChange, onUpdated, onDel
       setIsEditing(false);
       setError(null);
       loadEvents(ticket.id);
+      if (ticket.assigneeId && ticket.assigneeName) {
+        setAssignees([{ id: ticket.assigneeId, name: ticket.assigneeName, email: "" }]);
+      } else {
+        setAssignees([]);
+      }
     }
   }, [ticket]);
 
@@ -499,7 +504,7 @@ export function TicketDetailSheet({ ticket, open, onOpenChange, onUpdated, onDel
                   </label>
                   <Select value={form.status} onValueChange={(v: string | null) => { if (v) setForm((f) => ({ ...f, status: v as TicketStatus })); }}>
                     <SelectTrigger className="rounded-lg border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-sm h-9">
-                      <SelectValue />
+                      <span className="truncate">{STATUSES.find(s => s.value === form.status)?.label ?? form.status}</span>
                     </SelectTrigger>
                     <SelectContent>
                       {STATUSES.map((s) => (
@@ -515,7 +520,7 @@ export function TicketDetailSheet({ ticket, open, onOpenChange, onUpdated, onDel
                   </label>
                   <Select value={form.priority} onValueChange={(v: string | null) => { if (v) setForm((f) => ({ ...f, priority: v as TicketPriority })); }}>
                     <SelectTrigger className="rounded-lg border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-sm h-9">
-                      <SelectValue />
+                      <span className="truncate">{PRIORITIES.find(p => p.value === form.priority)?.label ?? form.priority}</span>
                     </SelectTrigger>
                     <SelectContent>
                       {PRIORITIES.map((p) => (
@@ -547,7 +552,11 @@ export function TicketDetailSheet({ ticket, open, onOpenChange, onUpdated, onDel
                   </label>
                   <Select value={form.assigneeId ?? "__unassigned__"} onValueChange={(v: string | null) => setForm((f) => ({ ...f, assigneeId: v && v !== "__unassigned__" ? v : null }))}>
                     <SelectTrigger className="rounded-lg border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800 text-sm h-9">
-                      <SelectValue />
+                      <span className="truncate">
+                        {form.assigneeId
+                          ? (assignees.find(a => a.id === form.assigneeId)?.name ?? ticket?.assigneeName ?? "")
+                          : "Unassigned"}
+                      </span>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__unassigned__">Unassigned</SelectItem>
