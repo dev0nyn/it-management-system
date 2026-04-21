@@ -9,7 +9,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import {
   Sheet,
@@ -185,7 +184,7 @@ export function UserFormSheet({
             </label>
             <Select value={role} onValueChange={(v: string | null) => { if (v) setRole(v as Role); }}>
               <SelectTrigger className="h-10 w-full rounded-xl border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-800">
-                <SelectValue />
+                <span className="truncate">{{ end_user: "End User", it_staff: "IT Staff", admin: "Admin" }[role] ?? role}</span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="end_user">End User</SelectItem>

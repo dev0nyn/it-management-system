@@ -634,7 +634,7 @@ export default function AssetsPage() {
               <div className="space-y-1.5">
                 <Label>Type</Label>
                 <Select value={form.type} onValueChange={(v: string | null) => { if (v) setForm((f) => ({ ...f, type: v as AssetType })); }}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger><span className="truncate capitalize">{form.type}</span></SelectTrigger>
                   <SelectContent>
                     {ASSET_TYPES.map((t) => (
                       <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
@@ -645,7 +645,7 @@ export default function AssetsPage() {
               <div className="space-y-1.5">
                 <Label>Status</Label>
                 <Select value={form.status} onValueChange={(v: string | null) => { if (v) setForm((f) => ({ ...f, status: v as AssetStatus })); }}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger><span className="truncate">{statusConfig[form.status]?.label ?? form.status}</span></SelectTrigger>
                   <SelectContent>
                     {ASSET_STATUSES.map((s) => (
                       <SelectItem key={s} value={s}>{statusConfig[s].label}</SelectItem>
