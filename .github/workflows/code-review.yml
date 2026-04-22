@@ -97,7 +97,7 @@ jobs:
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
-          npx eslint ${{ steps.changed-files.outputs.all_changed_files }} --max-warnings=0
+          npx eslint ${{ steps.changed-files.outputs.all_changed_files }} --max-warnings=0 --no-warn-ignored
 
       - name: Typecheck
         run: npx tsc --noEmit

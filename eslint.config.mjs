@@ -25,6 +25,7 @@ const eslintConfig = defineConfig([
     ".worktrees/**",
     "apps/**",
     "services/**",
+    "docs/**",
   ]),
 ]);
 
